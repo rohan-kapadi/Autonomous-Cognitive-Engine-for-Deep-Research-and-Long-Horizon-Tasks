@@ -1,0 +1,69 @@
+﻿# ========================================================
+# Git Ignore Rules for ACE (Autonomous Cognitive Engine)
+# ========================================================
+
+# Environment and Secrets (CRITICAL: Never commit credentials)
+.env
+.env.*
+.env.local
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# LangGraph Local Server & Studio Artifacts
+.langgraph_api/
+
+# Packaging and Build Artifacts
+deep_research_from_scratch.egg-info/
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
+
+# Generated Research Reports (keep sample reference files)
+src/deep_research_from_scratch/files/report_*.md
+src/deep_research_from_scratch/files/test_report_*.md
+notebooks/files/report_*.md
+!src/deep_research_from_scratch/files/coffee_shops_sf.md
+!notebooks/files/coffee_shops_sf.md
+
+# Jupyter Checkpoints
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Logs & Temporary Files
+*.log
+logs/
+temp/
+tmp/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Editor & IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+Desktop.ini
