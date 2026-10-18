@@ -256,3 +256,48 @@ python test_file_save.py
 ```
 
 ---
+
+## AI Contribution & What Our Team Built
+
+To help external evaluators, judges, and open-source contributors understand the technical contributions of our project:
+
+### 1. What Our Team Built (The Core Innovation)
+- **ACE Runtime & Cognitive State Schema (`src/deep_research_from_scratch/state_scope.py`)**:
+  We designed an explicit, checkpointable cognitive state model that captures the agent's long-horizon mental model (`objective`, `research_plan`, `tasks`, `completed_tasks`, `pending_tasks`, `sources`, `decisions`, `unresolved_questions`, `status`). Unlike standard stateless agents, ACE makes cognitive trajectory transparent and inspectable.
+- **Checkpoint, Interrupt & Dynamic Replanning (`src/deep_research_from_scratch/research_agent_full.py`)**:
+  We implemented the `checkpoint_and_resume` node using LangGraph's `interrupt()` primitive. This allows users to inspect the cognitive snapshot after scoping and optionally submit a dynamic replan directive (`Command(resume={"replan": "..."})`) before heavy sub-agents are spawned.
+- **Cognitive Snapshot & Inspection Utilities (`src/deep_research_from_scratch/generate_checkpoint.py`)**:
+  Created utilities to extract, format, and log persistent state snapshots across threads and LangSmith tracing runs.
+- **Production Graph & Multi-Model Orchestration**:
+  Integrated Google Gemma 4 for open-weight reasoning, coupled with fast async scoping via Groq, creating a robust, low-latency research engine.
+
+### 2. AI Model Roles
+- **Google Gemma 4 (`gemma-4-26b-a4b-it`)**: Primary cognitive model responsible for deep reasoning, multi-turn synthesis, lead supervision, and final report generation.
+- **Groq (`qwen/qwen3.8-27b`)**: Low-latency model dedicated to scoping and clarification structured output.
+- **Tavily Search**: Real-time web retrieval powering parallel researcher sub-agents.
+
+---
+
+## Demonstration Guide for Evaluators & Judges
+
+When presenting or demonstrating this project to hosts, judges, or evaluators:
+
+### Quick 2-Minute Demo Flow
+
+1. **Start the Engine**:
+   ```powershell
+   python demo_ace_run.py
+   ```
+2. **Explain the Live Execution**:
+   - **Phase 1 (Scoping)**: The agent analyzes the user prompt and determines if clarification is needed.
+   - **Phase 2 (Cognitive Planning)**: The agent formulates a living research plan and populates all 9 ACE cognitive state fields.
+   - **Phase 3 (Checkpoint Pause)**: The graph pauses at `checkpoint_and_resume` via LangGraph's `interrupt()`. Point out the printed **ACE Cognitive State** table showing `objective`, `research_plan`, `status: planning`, and `pending_interrupts`.
+   - **Phase 4 (Resume / Replan)**: Demonstrate that the state survives the checkpoint and can resume execution or dynamically pivot objectives without losing prior state.
+3. **Show LangSmith Tracing**:
+   - Open LangSmith to show the full visual execution trace under the project `deep_research_from_scratch`.
+
+---
+
+## License
+
+This project is licensed under the **MIT License** — an OSI-approved open-source license. See the [LICENSE](LICENSE) file for the full license text.
