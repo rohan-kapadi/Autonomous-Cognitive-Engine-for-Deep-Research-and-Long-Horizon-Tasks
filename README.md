@@ -1,8 +1,8 @@
 ﻿# Autonomous Cognitive Engine (ACE) for Deep Research and Long-Horizon Tasks
 
-An open-source cognitive runtime and multi-agent deep research engine powered by **Google Gemma 4** (`gemma-4-26b-a4b-it`), **LangGraph**, and **LangSmith**.
+An open-source cognitive runtime and multi-agent deep research engine powered by **Google Gemma 4** (`gemma-4-26b-a4b-it`) served via **Jarvislabs Token Factory**, **LangGraph**, and **LangSmith**.
 
-ACE equips autonomous AI agents with **persistent cognitive state**, **human-in-the-loop checkpoint/resume**, and **dynamic replanning** capabilities for complex, long-horizon research objectives.
+ACE equips autonomous AI agents with **persistent cognitive state** and **multi-agent research orchestration** for complex, long-horizon research objectives.
 
 ---
 
@@ -15,17 +15,13 @@ ACE equips autonomous AI agents with **persistent cognitive state**, **human-in-
   - `sources`: Discovered URLs and verified citations
   - `decisions`: Key architectural and analytical decisions made during execution
   - `unresolved_questions`: Explicit tracking of open knowledge gaps
-  - `status`: Lifecycle state (`planning`, `paused`, `researching`, `complete`)
+  - `status`: Lifecycle state (`researching`, `complete`)
 
-- **Open-Weight Cognitive Intelligence (Gemma 4)**:
-  - Primary reasoning powered by Google's **Gemma 4** (`gemma-4-26b-a4b-it`) via `ChatGoogleGenerativeAI`.
+- **Open-Weight Cognitive Intelligence (Gemma 4 on Jarvislabs)**:
+  - Every agent step (scoping, supervision, research, compression, report) runs on **Gemma 4** (`gemma-4-26b-a4b-it`) via the OpenAI-compatible **Jarvislabs Token Factory** endpoint.
+  - Switch providers with `RESEARCH_MODEL_PROVIDER` (`jarvislabs` | `gemma` for Google GenAI | `groq`); a provider without a valid key falls back to one that has one.
+  - Structured output uses strict `json_schema` with automatic `function_calling` fallback, tuned from live measurements on the endpoint.
   - Built-in thinking token parsing (`extract_text_content`) preserving core reasoning outputs.
-  - Sub-second scoping powered by Groq (`qwen/qwen3.8-27b`) for ultra-responsive user clarification.
-
-- **Human-in-the-Loop Checkpoint & Dynamic Replanning**:
-  - The graph pauses at `checkpoint_and_resume` via LangGraph `interrupt()`.
-  - Inspect the full cognitive state snapshot before research begins.
-  - Resume with `Command(resume=True)` or override direction with `Command(resume={"replan": "new objective"})`.
 
 - **Hierarchical Multi-Agent Supervisor Pattern**:
   - Lead researcher agent dynamically orchestrates parallel sub-agents.
@@ -46,10 +42,7 @@ flowchart TD
     clarify -->|Needs More Info| END_CLARIFY([Ask Clarifying Question])
     clarify -->|Sufficient Info| brief[2. Write Research Brief]
     brief --> cog_init[3. Populate ACE Cognitive State]
-    cog_init --> pause[4. Checkpoint & Resume Pause]
-    
-    pause -.->|Human Review / Replan| pause
-    pause -->|Resume| supervisor[5. Multi-Agent Supervisor]
+    cog_init --> supervisor[4. Multi-Agent Supervisor]
     
     subgraph Parallel Research Execution
         supervisor --> worker1[Researcher Agent 1]
@@ -61,8 +54,8 @@ flowchart TD
     end
     
     worker1 & worker2 & workerN --> supervisor
-    supervisor --> report[6. Final Report Generation - Gemma 4]
-    report --> save[7. Save Report Artifact to Markdown]
+    supervisor --> report[5. Final Report Generation - Gemma 4]
+    report --> save[6. Save Report Artifact to Markdown]
     save --> FINISH([End - Status: Complete])
 ```
 
@@ -166,8 +159,7 @@ https://smith.langchain.com/studio/?baseUrl=http://localhost:8000
 1. Select the `research_agent_full` graph.
 2. Click **`+` (New Thread)**.
 3. Submit your research topic.
-4. Watch the agent clarify scope, generate the cognitive plan, and pause at the checkpoint.
-5. Click **Resume** on the interrupt prompt to execute parallel sub-agents and generate the final report.
+4. Watch the agent clarify scope, generate the cognitive plan, run the research sub-agents, and write the final report.
 
 ---
 
@@ -248,18 +240,26 @@ Access services:
 
 ## Testing
 
-Run the test suite to verify the ACE cognitive state, Gemma 4 models, and file persistence:
+The `tests/` pytest suite has two tiers:
 
 ```powershell
-# Test ACE cognitive state checkpointing
-python test_ace_checkpoint.py
+# Offline: fake models and search, no API keys, no cost
+python -m pytest -v
 
-# Test Gemma 4 connectivity and thinking block parsing
-python test_gemma_smoke.py
-
-# Test file saving node
-python test_file_save.py
+# Live: real Jarvislabs + Tavily calls (spends a few cents); needs keys in .env
+python -m pytest --live -v tests/test_jarvislabs_endpoint.py   # endpoint, tool calling, structured output
+python -m pytest --live -v -s                                  # everything, including a full end-to-end run
 ```
+
+| File | Covers |
+|---|---|
+| `test_model_provider.py` | Provider selection, key fallback, Jarvislabs config, structured-output fallback chain |
+| `test_jarvislabs_endpoint.py` | Live endpoint: models list, completions, tool calling, structured output |
+| `test_web_search.py` | Tavily tool, dedup, summarization and its fallback |
+| `test_research_agent.py` | Researcher loop: search -> reflect -> compress |
+| `test_supervisor.py` | Delegation, parallel research, retries, completion guards |
+| `test_full_flow.py` | Full graph: scoping -> research -> report saved |
+| `test_live_e2e.py` | Live full run on Jarvislabs |
 
 ---
 
@@ -270,16 +270,14 @@ To help external evaluators, judges, and open-source contributors understand the
 ### 1. What Our Team Built (The Core Innovation)
 - **ACE Runtime & Cognitive State Schema (`src/deep_research_from_scratch/state_scope.py`)**:
   We designed an explicit, checkpointable cognitive state model that captures the agent's long-horizon mental model (`objective`, `research_plan`, `tasks`, `completed_tasks`, `pending_tasks`, `sources`, `decisions`, `unresolved_questions`, `status`). Unlike standard stateless agents, ACE makes cognitive trajectory transparent and inspectable.
-- **Checkpoint, Interrupt & Dynamic Replanning (`src/deep_research_from_scratch/research_agent_full.py`)**:
-  We implemented the `checkpoint_and_resume` node using LangGraph's `interrupt()` primitive. This allows users to inspect the cognitive snapshot after scoping and optionally submit a dynamic replan directive (`Command(resume={"replan": "..."})`) before heavy sub-agents are spawned.
 - **Cognitive Snapshot & Inspection Utilities (`src/deep_research_from_scratch/generate_checkpoint.py`)**:
   Created utilities to extract, format, and log persistent state snapshots across threads and LangSmith tracing runs.
-- **Production Graph & Multi-Model Orchestration**:
-  Integrated Google Gemma 4 for open-weight reasoning, coupled with fast async scoping via Groq, creating a robust, low-latency research engine.
+- **Production Graph & Multi-Provider Model Layer (`src/deep_research_from_scratch/gemma_model.py`)**:
+  A single model factory routes every agent step to Jarvislabs Token Factory (default), Google GenAI, or Groq, with key-aware fallback and a structured-output fallback chain.
 
 ### 2. AI Model Roles
-- **Google Gemma 4 (`gemma-4-26b-a4b-it`)**: Primary cognitive model responsible for deep reasoning, multi-turn synthesis, lead supervision, and final report generation.
-- **Groq (`qwen/qwen3.8-27b`)**: Low-latency model dedicated to scoping and clarification structured output.
+- **Google Gemma 4 (`gemma-4-26b-a4b-it`) on Jarvislabs Token Factory**: Primary cognitive model for scoping, deep reasoning, lead supervision, research compression, and final report generation.
+- **Google GenAI / Groq**: Alternative providers selectable via `RESEARCH_MODEL_PROVIDER`.
 - **Tavily Search**: Real-time web retrieval powering parallel researcher sub-agents.
 
 ---
@@ -297,8 +295,8 @@ When presenting or demonstrating this project to hosts, judges, or evaluators:
 2. **Explain the Live Execution**:
    - **Phase 1 (Scoping)**: The agent analyzes the user prompt and determines if clarification is needed.
    - **Phase 2 (Cognitive Planning)**: The agent formulates a living research plan and populates all 9 ACE cognitive state fields.
-   - **Phase 3 (Checkpoint Pause)**: The graph pauses at `checkpoint_and_resume` via LangGraph's `interrupt()`. Point out the printed **ACE Cognitive State** table showing `objective`, `research_plan`, `status: planning`, and `pending_interrupts`.
-   - **Phase 4 (Resume / Replan)**: Demonstrate that the state survives the checkpoint and can resume execution or dynamically pivot objectives without losing prior state.
+   - **Phase 3 (Research)**: The supervisor delegates sub-topics to researcher agents, which search with Tavily and compress their findings.
+   - **Phase 4 (Report)**: The final report is written and saved; point out the printed **ACE Cognitive State** table showing `objective`, `research_plan`, `decisions`, and `status: complete`.
 3. **Show LangSmith Tracing**:
    - Open LangSmith to show the full visual execution trace under the project `deep_research_from_scratch`.
 

@@ -9,7 +9,6 @@ import uuid
 import pytest
 from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.types import Command
 
 from deep_research_from_scratch import (
     multi_agent_supervisor,
@@ -54,20 +53,15 @@ async def test_full_research_run_on_jarvislabs(jarvislabs_everywhere):
     graph = research_agent_full.deep_researcher_builder.compile(checkpointer=MemorySaver())
     config = {"configurable": {"thread_id": f"live-{uuid.uuid4()}"}}
 
-    await graph.ainvoke({"messages": [HumanMessage(content=PROMPT)]}, config)
+    result = await graph.ainvoke({"messages": [HumanMessage(content=PROMPT)]}, config)
 
-    # The scoping model may still ask a question; answer up to twice
+    # The scoping model may still ask a question instead of researching; answer up to twice
     for _ in range(2):
-        if graph.get_state(config).next:
+        if result.get("final_report"):
             break
-        await graph.ainvoke({"messages": [HumanMessage(content=CLARIFICATION_ANSWER)]}, config)
+        result = await graph.ainvoke({"messages": [HumanMessage(content=CLARIFICATION_ANSWER)]}, config)
 
-    paused = graph.get_state(config)
-    assert paused.next == ("checkpoint_and_resume",), "Graph did not reach the checkpoint after scoping"
-    assert paused.values["research_brief"], "Scoping produced no research brief"
-
-    result = await graph.ainvoke(Command(resume=True), config)
-
+    assert result.get("research_brief"), "Scoping produced no research brief"
     assert result["status"] == "complete"
     assert result["notes"], "Supervisor finished without any research notes (tool calling may not be working)"
     assert len(result["final_report"]) > 200, f"Report too short:\n{result['final_report']}"

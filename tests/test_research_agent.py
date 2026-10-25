@@ -17,10 +17,10 @@ def researcher(monkeypatch, fake_tavily, fake_summarizer):
     return llm, compressor
 
 
-def _run(topic="solid-state batteries"):
+async def _run(topic="solid-state batteries"):
     nodes = []
     final = {}
-    for update in research_agent.researcher_agent.stream(
+    async for update in research_agent.researcher_agent.astream(
         {"researcher_messages": [HumanMessage(content=topic)], "research_topic": topic},
         stream_mode="updates",
     ):
@@ -44,11 +44,11 @@ def test_should_continue_routes_final_answer_to_compression():
 
 # ===== FULL RESEARCHER LOOP =====
 
-def test_search_then_compress(researcher, fake_tavily):
+async def test_search_then_compress(researcher, fake_tavily):
     llm, compressor = researcher
     llm.responses = [tool_call_msg("tavily_search", {"query": "solid-state energy density"}, "s1"), "Done researching."]
 
-    nodes, final = _run()
+    nodes, final = await _run()
 
     assert nodes == ["llm_call", "tool_node", "llm_call", "compress_research"]
     assert fake_tavily.calls[0]["query"] == "solid-state energy density"
@@ -65,18 +65,18 @@ def test_search_then_compress(researcher, fake_tavily):
     assert "URL: https://example.com/a" in "\n".join(final["raw_notes"])
 
 
-def test_compression_sees_full_research_history(researcher):
+async def test_compression_sees_full_research_history(researcher):
     llm, compressor = researcher
     llm.responses = [tool_call_msg("tavily_search", {"query": "q"}, "s1"), "Done."]
 
-    _run()
+    await _run()
 
     compress_input = compressor.calls[0]
     assert any(isinstance(m, ToolMessage) for m in compress_input)
     assert isinstance(compress_input[-1], HumanMessage), "Compression instruction should come last"
 
 
-def test_multiple_search_rounds(researcher, fake_tavily):
+async def test_multiple_search_rounds(researcher, fake_tavily):
     llm, _ = researcher
     llm.responses = [
         tool_call_msg("tavily_search", {"query": "first"}, "s1"),
@@ -84,28 +84,28 @@ def test_multiple_search_rounds(researcher, fake_tavily):
         "Done.",
     ]
 
-    nodes, _ = _run()
+    nodes, _ = await _run()
 
     assert nodes.count("tool_node") == 2
     assert [c["query"] for c in fake_tavily.calls] == ["first", "second"]
 
 
-def test_think_tool_runs_without_search(researcher, fake_tavily):
+async def test_think_tool_runs_without_search(researcher, fake_tavily):
     llm, _ = researcher
     llm.responses = [tool_call_msg("think_tool", {"reflection": "Plan: search specs"}, "t1"), "Done."]
 
-    nodes, _ = _run()
+    nodes, _ = await _run()
 
     assert nodes == ["llm_call", "tool_node", "llm_call", "compress_research"]
     assert fake_tavily.calls == []
     assert "Reflection recorded: Plan: search specs" in llm.calls[1][-1].content
 
 
-def test_immediate_answer_skips_tools(researcher, fake_tavily):
+async def test_immediate_answer_skips_tools(researcher, fake_tavily):
     llm, _ = researcher
     llm.responses = ["No research needed."]
 
-    nodes, final = _run()
+    nodes, final = await _run()
 
     assert nodes == ["llm_call", "compress_research"]
     assert final["compressed_research"] == "COMPRESSED FINDINGS"

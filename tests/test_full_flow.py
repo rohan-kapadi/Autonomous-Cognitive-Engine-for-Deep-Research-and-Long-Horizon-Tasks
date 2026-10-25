@@ -1,7 +1,7 @@
 """Offline end-to-end tests of the full ACE graph with every model faked.
 
-Flow: clarify -> brief -> cognitive state -> checkpoint pause -> resume ->
-supervisor -> researcher (search -> compress) -> final report -> saved file.
+Flow: clarify -> brief -> cognitive state -> supervisor ->
+researcher (search -> compress) -> final report -> saved file.
 """
 
 import uuid
@@ -10,7 +10,6 @@ import pytest
 from fakes import ScriptedModel, tool_call_msg
 from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.types import Command
 
 from deep_research_from_scratch import (
     multi_agent_supervisor,
@@ -63,50 +62,24 @@ def config():
     return {"configurable": {"thread_id": f"test-{uuid.uuid4()}"}}
 
 
-# ===== PHASE 1: SCOPING + CHECKPOINT =====
-
-async def test_pauses_at_checkpoint_with_cognitive_state(models, graph, config):
-    await graph.ainvoke({"messages": [HumanMessage(content=OBJECTIVE)]}, config)
-
-    state = graph.get_state(config)
-    assert state.next == ("checkpoint_and_resume",)
-    assert state.values["status"] == "planning"
-    assert state.values["objective"] == OBJECTIVE
-    assert state.values["research_brief"] == "BRIEF: battery energy density comparison"
-    assert state.values["research_plan"] == state.values["research_brief"]
-    assert any("Research plan finalised" in d for d in state.values["decisions"])
-
-    interrupt_value = state.tasks[0].interrupts[0].value
-    assert interrupt_value["status"] == "paused"
-    assert interrupt_value["objective"] == OBJECTIVE
-
-    # Nothing beyond scoping ran yet
-    assert models["supervisor"].calls == []
-    assert models["writer"].calls == []
+def _nodes_run(graph, config):
+    """Node names in execution order, read from the checkpoint history."""
+    history = reversed(list(graph.get_state_history(config)))
+    return [name for snapshot in history for name in snapshot.next]
 
 
-async def test_clarification_question_ends_turn(models, graph, config):
-    models["scoping"].structured = [
-        ClarifyWithUser(need_clarification=True, question="Which vehicle segment?", verification=""),
+async def test_runs_end_to_end_and_saves_report(models, graph, config, fake_tavily):
+    result = await graph.ainvoke({"messages": [HumanMessage(content=OBJECTIVE)]}, config)
+
+    # Runs straight through, no pause
+    assert graph.get_state(config).next == ()
+    assert _nodes_run(graph, config)[-6:] == [
+        "clarify_with_user", "write_research_brief", "populate_cognitive_state",
+        "supervisor_subgraph", "final_report_generation", "save_report_to_file",
     ]
 
-    result = await graph.ainvoke({"messages": [HumanMessage(content="Research batteries")]}, config)
-
-    assert result["messages"][-1].content == "Which vehicle segment?"
-    assert graph.get_state(config).next == ()
-    assert models["supervisor"].calls == []
-
-
-# ===== PHASE 2: RESUME -> RESEARCH -> REPORT =====
-
-async def test_resume_runs_research_and_saves_report(models, graph, config, fake_tavily):
-    await graph.ainvoke({"messages": [HumanMessage(content=OBJECTIVE)]}, config)
-    result = await graph.ainvoke(Command(resume=True), config)
-
-    # Supervisor received the brief
+    # Supervisor received the brief; researcher searched via Tavily
     assert "BRIEF: battery energy density comparison" in models["supervisor"].calls[0][-1].content
-
-    # Researcher searched via Tavily
     assert fake_tavily.calls[0]["query"] == "solid-state battery Wh/kg"
 
     # Compressed findings flowed into notes and into the report prompt
@@ -121,23 +94,41 @@ async def test_resume_runs_research_and_saves_report(models, graph, config, fake
     saved = list(models["files_dir"].glob("report_*.md"))
     assert len(saved) == 1
     assert saved[0].read_text(encoding="utf-8") == result["final_report"]
+    assert result["messages"][-1].content.startswith("Report saved to:")
+
+
+async def test_cognitive_state_is_populated(models, graph, config):
+    result = await graph.ainvoke({"messages": [HumanMessage(content=OBJECTIVE)]}, config)
+
+    assert result["objective"] == OBJECTIVE
+    assert result["research_brief"] == "BRIEF: battery energy density comparison"
+    assert result["research_plan"] == result["research_brief"]
+    assert any("Research plan finalised" in d for d in result["decisions"])
+
+
+async def test_clarification_question_ends_turn(models, graph, config):
+    models["scoping"].structured = [
+        ClarifyWithUser(need_clarification=True, question="Which vehicle segment?", verification=""),
+    ]
+
+    result = await graph.ainvoke({"messages": [HumanMessage(content="Research batteries")]}, config)
+
+    assert result["messages"][-1].content == "Which vehicle segment?"
     assert graph.get_state(config).next == ()
+    assert not result.get("final_report")
+    assert models["supervisor"].calls == []
 
 
-async def test_replan_updates_objective_and_decisions(models, graph, config):
-    await graph.ainvoke({"messages": [HumanMessage(content=OBJECTIVE)]}, config)
-    result = await graph.ainvoke(Command(resume={"replan": "Focus on sodium-ion instead"}), config)
+async def test_answering_clarification_continues_to_report(models, graph, config):
+    models["scoping"].structured = [
+        ClarifyWithUser(need_clarification=True, question="Which vehicle segment?", verification=""),
+        ClarifyWithUser(need_clarification=False, question="", verification="Starting research."),
+        ResearchQuestion(research_brief="BRIEF: battery energy density comparison"),
+    ]
 
-    assert result["objective"] == "Focus on sodium-ion instead"
-    assert result["research_plan"] == "Focus on sodium-ion instead"
-    assert any("User replanned at checkpoint" in d for d in result["decisions"])
+    await graph.ainvoke({"messages": [HumanMessage(content="Research batteries")]}, config)
+    result = await graph.ainvoke({"messages": [HumanMessage(content="Passenger EVs")]}, config)
+
     assert result["status"] == "complete"
-
-
-@pytest.mark.xfail(strict=True, reason="Known gap: replan updates objective/research_plan, "
-                   "but the supervisor still reads research_brief, so research direction does not change")
-async def test_replan_changes_research_direction(models, graph, config):
-    await graph.ainvoke({"messages": [HumanMessage(content=OBJECTIVE)]}, config)
-    await graph.ainvoke(Command(resume={"replan": "Focus on sodium-ion instead"}), config)
-
-    assert "sodium-ion" in models["supervisor"].calls[0][-1].content
+    clarify_prompt = models["scoping"].structured_calls[1][0].content
+    assert "Passenger EVs" in clarify_prompt, "Second turn should see the user's answer in the conversation"
