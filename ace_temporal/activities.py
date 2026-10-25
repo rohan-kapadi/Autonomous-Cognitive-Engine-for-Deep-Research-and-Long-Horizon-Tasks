@@ -7,15 +7,65 @@ in the Temporal UI event history.
 """
 
 import asyncio
+import logging
+import os
 import time
 
+import httpx
 from langchain_core.callbacks import BaseCallbackHandler
+from langchain_google_genai import ChatGoogleGenerativeAI
 from temporalio import activity
 
-# Fail an attempt if no LLM/tool call starts or finishes for this long, so a hung
-# HTTP request (the model client has no timeout) triggers a Temporal retry instead
-# of being masked by heartbeats until start_to_close expires.
-STALL_SECONDS = 8 * 60
+logger = logging.getLogger(__name__)
+
+# Per-request timeout for Gemma calls. The models in ``src/`` are created without
+# one, and a request retried after a 429 can hang forever. Applied as a default
+# before ``src/`` is imported (activities import it lazily), so ``src/`` is untouched.
+# A timed-out call is retried in place, so one slow response does not throw away
+# the whole research attempt (``src/`` only retries rate-limit errors).
+GEMMA_REQUEST_TIMEOUT_SECONDS = float(os.getenv("GEMMA_REQUEST_TIMEOUT_SECONDS", "90"))
+GEMMA_TIMEOUT_TRIES = 3
+_TIMEOUT_ERRORS = (TimeoutError, httpx.TimeoutException)  # async path, sync path
+
+_genai_init = ChatGoogleGenerativeAI.__init__
+_genai_generate = ChatGoogleGenerativeAI._generate
+_genai_agenerate = ChatGoogleGenerativeAI._agenerate
+
+
+def _genai_init_with_timeout(self, **kwargs) -> None:
+    kwargs.setdefault("timeout", GEMMA_REQUEST_TIMEOUT_SECONDS)
+    _genai_init(self, **kwargs)
+
+
+def _generate_retrying(self, *args, **kwargs):
+    for attempt in range(1, GEMMA_TIMEOUT_TRIES + 1):
+        try:
+            return _genai_generate(self, *args, **kwargs)
+        except _TIMEOUT_ERRORS:
+            if attempt == GEMMA_TIMEOUT_TRIES:
+                raise
+            logger.warning("Gemma request timed out (try %s/%s); retrying", attempt, GEMMA_TIMEOUT_TRIES)
+
+
+async def _agenerate_retrying(self, *args, **kwargs):
+    for attempt in range(1, GEMMA_TIMEOUT_TRIES + 1):
+        try:
+            return await _genai_agenerate(self, *args, **kwargs)
+        except _TIMEOUT_ERRORS:
+            if attempt == GEMMA_TIMEOUT_TRIES:
+                raise
+            logger.warning("Gemma request timed out (try %s/%s); retrying", attempt, GEMMA_TIMEOUT_TRIES)
+
+
+ChatGoogleGenerativeAI.__init__ = _genai_init_with_timeout
+ChatGoogleGenerativeAI._generate = _generate_retrying
+ChatGoogleGenerativeAI._agenerate = _agenerate_retrying
+
+# Backstop: fail an attempt if no LLM/tool call starts or finishes for this long,
+# so anything still hanging triggers a Temporal retry instead of being masked by
+# heartbeats until start_to_close expires. Must exceed a call's full timeout-retry
+# budget, since in-place retries do not fire LLM callbacks.
+STALL_SECONDS = GEMMA_TIMEOUT_TRIES * GEMMA_REQUEST_TIMEOUT_SECONDS + 60
 
 
 def _to_messages(messages: list[dict]):
