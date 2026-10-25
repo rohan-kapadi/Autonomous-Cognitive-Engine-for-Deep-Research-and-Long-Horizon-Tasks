@@ -1,245 +1,174 @@
-# 🧠 Deep Research From Scratch — Setup Guide
+# ⚙️ ACE (Autonomous Cognitive Engine) — Setup & Quickstart Guide
 
-This project is an **Autonomous Learning Agent** built with [LangGraph](https://github.com/langchain-ai/langgraph) and Google Gemini. It implements a full multi-agent research pipeline using the Feynman pedagogy and checkpoint verification, structured across 6 progressive Jupyter notebooks.
+This document provides setup instructions for the **Autonomous Cognitive Engine (ACE) for Deep Research and Long-Horizon Tasks**.
 
----
-
-## 📋 Project Structure
-
-```
-Infosys_springboard_Project/
-├── src/
-│   └── deep_research_from_scratch/   # Core agent source modules
-│       ├── research_agent.py
-│       ├── research_agent_scope.py
-│       ├── research_agent_mcp.py
-│       ├── multi_agent_supervisor.py
-│       ├── research_agent_full.py
-│       ├── learning_agent.py
-│       └── deep_research_agent.py
-├── notebooks/                        # 6 step-by-step tutorial notebooks
-│   ├── 1_scoping.ipynb
-│   ├── 2_research_agent.ipynb
-│   ├── 3_research_agent_mcp.ipynb
-│   ├── 4_research_supervisor.ipynb
-│   ├── 5_full_agent.ipynb
-│   └── 6_checkpoint_agent.ipynb
-├── .env.example                      # Template for environment variables
-├── pyproject.toml                    # Project dependencies
-├── langgraph.json                    # LangGraph graph registry
-├── Dockerfile                        # Docker image definition
-└── docker-compose.yml                # Docker Compose config
-```
+For complete system architecture, user personas, durability guarantees, Deep Agents comparison, and observability details, see the canonical [README.md](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/README.md).
 
 ---
 
-## 🔑 Prerequisites
+## 📋 Prerequisites
 
-Before you begin, get the following API keys:
+- **Python**: 3.11, 3.12, or 3.13 (`>=3.11,<3.14` per `pyproject.toml`)
+- **Package Manager**: [uv](https://docs.astral.sh/uv/) (Astral)
+- **Node.js** (Optional, LTS): Required only if using Model Context Protocol (MCP) tool servers
+- **Temporal CLI** (Recommended for durable execution):
+  - macOS: `brew install temporal`
+  - Linux / Windows: See [Temporal CLI Installation](https://docs.temporal.io/cli)
 
-| Service | Purpose | Get it at |
-|---|---|---|
-| **Google Gemini API Key** | Primary AI model | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
-| **Tavily API Key** | Web search for research agents | [tavily.com](https://tavily.com) |
-| **LangSmith API Key** *(optional)* | Tracing and evaluation | [smith.langchain.com](https://smith.langchain.com) |
+### API Keys Required
 
----
-
-## ⚙️ Environment Setup
-
-1. **Copy the example env file:**
-
-   ```powershell
-   copy .env.example .env
-   ```
-
-2. **Edit `.env`** and fill in your real API keys:
-
-   ```env
-   # Required — Google Gemini (primary model)
-   GOOGLE_API_KEY=your_google_api_key_here
-
-   # Required — Tavily (web search for research agents)
-   TAVILY_API_KEY=your_tavily_api_key_here
-
-   # Optional — LangSmith tracing
-   LANGSMITH_API_KEY=your_langsmith_api_key_here
-   LANGSMITH_TRACING=true
-   LANGSMITH_PROJECT=deep_research_from_scratch
-   ```
-
-> ⚠️ **Never** commit your `.env` file. It is already listed in `.gitignore`.
+| Service | Environment Variable | Required For | Where to Obtain |
+|---|---|---|---|
+| **Google Gemini** | `GOOGLE_API_KEY` | Primary cognitive model & report synthesis | [Google AI Studio](https://aistudio.google.com/app/apikey) |
+| **Groq** | `GROQ_API_KEY` | Fast structured scoping & clarification fallback | [Groq Console](https://console.groq.com/keys) |
+| **Tavily** | `TAVILY_API_KEY` | Deep multi-agent web retrieval | [Tavily AI](https://tavily.com) |
+| **LangSmith** *(Optional)* | `LANGSMITH_API_KEY` | Execution tracing & observability | [LangSmith](https://smith.langchain.com) |
 
 ---
 
-## 🐳 Option 1: Docker (Recommended)
+## 🚀 Quickstart: Local Development with `uv`
 
-This is the simplest way — Docker bundles Python 3.11, Node.js, and `uv` for you.
+### 1. Clone Repository & Checkout the `temporal` Branch
 
-### Prerequisites
-- [Docker Desktop](https://docs.docker.com/get-docker/) installed and running
-
-### Steps
-
-```powershell
-# 1. Build the Docker image (first time only)
-docker-compose build
-
-# 2. Start the container in the background
-docker-compose up -d
-
-# 3. View logs to confirm it started successfully
-docker-compose logs -f
+```bash
+git clone -b temporal https://github.com/rohan-kapadi/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks.git
+cd Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks
 ```
 
-### Access the Services
+### 2. Install Dependencies
 
-| Service | URL |
-|---|---|
-| **LangGraph Studio** | https://smith.langchain.com/studio/?baseUrl=http://localhost:8000 |
-| **API Docs (Swagger)** | http://localhost:8000/docs |
-| **API Root** | http://localhost:8000 |
-
-### Useful Docker Commands
-
-```powershell
-# Stop the container
-docker-compose down
-
-# Rebuild from scratch (after code changes)
-docker-compose down && docker-compose build --no-cache && docker-compose up -d
-
-# Stop and remove all data volumes
-docker-compose down -v
-```
-
----
-
-## 💻 Option 2: Local Installation (Windows)
-
-Use this path if you prefer to run the project directly on your machine.
-
-### Step 1 — Install Python 3.11+
-
-Download from [python.org](https://www.python.org/downloads/) and verify:
-
-```powershell
-python --version   # Should show 3.11.x or higher
-```
-
-> ⚠️ During installation, check **"Add Python to PATH"**.
-
-### Step 2 — Install `uv` (Package Manager)
-
-`uv` is a fast Python package manager used by this project instead of pip.
-
-```powershell
-# Install uv using pip
-pip install uv
-
-# Verify
-uv --version
-```
-
-### Step 3 — Install Node.js (for MCP notebooks)
-
-Download from [nodejs.org](https://nodejs.org/en/download) (LTS version). Verify:
-
-```powershell
-node --version
-npx --version
-```
-
-### Step 4 — Install Project Dependencies
-
-```powershell
-# This creates a virtual environment and installs all packages from pyproject.toml
+```bash
+# Install locked dependencies including temporalio, langgraph, and langchain
 uv sync
+
+# Or include development/testing packages
+uv sync --extra dev
 ```
 
-### Step 5 — Activate the Virtual Environment
+### 3. Configure Environment Variables
 
-```powershell
-.venv\Scripts\activate
+```bash
+cp .env.example .env
 ```
 
-Your prompt should change to show `(.venv)`.
+Edit `.env` with your API keys:
 
-### Step 6 — Run the LangGraph Server
+```env
+# Primary LLM & Web Search
+GOOGLE_API_KEY=your_google_api_key_here
+GROQ_API_KEY=your_groq_api_key_here
+TAVILY_API_KEY=your_tavily_api_key_here
 
-```powershell
-uvx --refresh --from "langgraph-cli[inmem]" --with-editable . --python 3.11 langgraph dev --allow-blocking
+# LangSmith Observability
+LANGCHAIN_TRACING_V2=true
+LANGSMITH_API_KEY=your_langsmith_key_here
+LANGSMITH_PROJECT=ace-temporal-demo
+
+# Temporal Durable Execution
+TEMPORAL_ADDRESS=localhost:7233
+TEMPORAL_NAMESPACE=default
+TEMPORAL_TASK_QUEUE=ace-research
 ```
-
-Then open LangGraph Studio at:
-```
-https://smith.langchain.com/studio/?baseUrl=http://localhost:8000
-```
-
-### Step 7 — Or Run Jupyter Notebooks
-
-```powershell
-# Run notebooks using uv (no need to activate the venv separately)
-uv run jupyter notebook
-```
-
-This opens a browser window where you can open notebooks from the `notebooks/` folder.
 
 ---
 
-## 📓 Notebook Learning Path
+## 🎯 Running Demonstrations
 
-Run the notebooks in order for the best learning experience:
+### Path A: Temporal Durable Research (Recommended)
 
-| # | Notebook | What You Learn |
+1. **Start the local Temporal development server** (in terminal 1):
+   ```bash
+   temporal server start-dev
+   ```
+   *Web UI becomes accessible at [http://localhost:8233](http://localhost:8233).*
+
+2. **Start the ACE Temporal worker** (in terminal 2):
+   ```bash
+   uv run python -m temporal_integration.worker
+   ```
+
+3. **Run the interactive judge-ready demo** (in terminal 3):
+   ```bash
+   uv run python demo_ace_temporal.py
+   ```
+   *The demo submits an objective, runs scoping, pauses at the cognitive checkpoint, displays the full state snapshot, and awaits your input to approve or replan.*
+
+### Path B: Standalone LangGraph Execution (No Temporal Required)
+
+```bash
+uv run python demo_ace_run.py
+```
+
+### Path C: Live LangSmith Tracing Demo
+
+```bash
+uv run python demo_ace_langsmith.py
+```
+
+### Path D: LangGraph Studio UI
+
+```bash
+uvx --refresh --from "langgraph-cli[inmem]" --with-editable . --python 3.12 langgraph dev --allow-blocking
+```
+*Open Studio at: `https://smith.langchain.com/studio/?baseUrl=http://localhost:8000`*
+
+---
+
+## 🧪 Running Automated Tests
+
+Run the full automated test suite with zero external API dependencies (all LLM and search calls are mocked):
+
+```bash
+uv run pytest tests/
+```
+
+Verify specific suites:
+```bash
+uv run pytest tests/test_existing_behavior.py      # Core graph structure & cognitive state
+uv run pytest tests/test_temporal_workflow.py       # Workflow lifecycles, retries, and errors
+uv run pytest tests/test_human_resume.py            # Checkpoint pause, resume, and replan
+uv run pytest tests/test_langsmith_integration.py   # LangSmith plugin configuration
+```
+
+---
+
+## 🐳 Docker Deployment
+
+To run the complete stack including the Temporal server, ACE worker, and LangGraph dev server via Docker Compose:
+
+```bash
+# Build and start all services
+docker compose up -d
+
+# View worker logs
+docker compose logs -f temporal-worker
+```
+
+| Service | Address | Purpose |
 |---|---|---|
-| 1 | `1_scoping.ipynb` | User clarification, brief generation, structured output |
-| 2 | `2_research_agent.ipynb` | ReAct agent loop, Tavily search, tool integration |
-| 3 | `3_research_agent_mcp.ipynb` | Model Context Protocol (MCP), async tool execution |
-| 4 | `4_research_supervisor.ipynb` | Multi-agent coordination, parallel research |
-| 5 | `5_full_agent.ipynb` | End-to-end: Scope → Research → Write pipeline |
-| 6 | `6_checkpoint_agent.ipynb` | Checkpoint verification, Feynman pedagogy |
+| **Temporal Web UI** | `http://localhost:8233` | Inspect workflow history, activity retries, and signals |
+| **Temporal gRPC** | `localhost:7233` | Worker & client execution address |
+| **LangGraph Dev API** | `http://localhost:8000` | LangGraph Studio connection endpoint |
 
 ---
 
-## 🧩 LangGraph Graphs
+## 🧩 Registered LangGraph Graphs
 
-The following graphs are registered in `langgraph.json` and available via the LangGraph Studio UI:
+Per `langgraph.json`:
 
-| Graph Name | Description |
-|---|---|
-| `scope_research` | Scoping and clarification agent |
-| `research_agent` | Basic research agent with tools |
-| `research_agent_mcp` | Research agent using MCP servers |
-| `research_agent_supervisor` | Multi-agent supervisor orchestrator |
-| `research_agent_full` | Full three-phase pipeline |
-| `learning_agent` | Feynman-based learning agent |
-| `deep_researcher` | Full deep research agent |
-
----
-
-## 🐛 Troubleshooting
-
-| Problem | Fix |
-|---|---|
-| `RESOURCE_EXHAUSTED` from Gemini API | You've hit the free-tier quota. Wait or upgrade to a paid plan. Generate a new key at [aistudio.google.com](https://aistudio.google.com/app/apikey) |
-| `API key expired` | Generate a fresh key and update `.env` |
-| `uv: command not found` | Run `pip install uv` and ensure your PATH is set |
-| Port 8000 already in use | Stop other services, or change the port in `docker-compose.yml` |
-| `ModuleNotFoundError` in notebooks | Make sure you ran `uv sync` and selected the `.venv` kernel in Jupyter |
-| Docker not starting | Make sure Docker Desktop is running before running `docker-compose` commands |
+| Graph Name | Module Path | Purpose |
+|---|---|---|
+| `research_agent_full` | `deep_research_from_scratch.research_agent_full:agent` | Full production research pipeline with cognitive checkpoint |
+| `scope_research` | `deep_research_from_scratch.research_agent_scope:scope_research` | Scoping and clarification graph |
+| `research_agent` | `deep_research_from_scratch.research_agent:researcher_agent` | Tool-calling researcher agent |
+| `research_agent_mcp` | `deep_research_from_scratch.research_agent_mcp:agent_mcp` | Model Context Protocol research agent |
+| `research_agent_supervisor` | `deep_research_from_scratch.multi_agent_supervisor:supervisor_agent` | Supervisor coordination graph |
+| `learning_agent` | `deep_research_from_scratch.learning_agent:learning_agent` | Feynman-based pedagogy agent |
+| `deep_researcher` | `deep_research_from_scratch.deep_research_agent:deep_researcher` | Comprehensive research workflow |
 
 ---
 
-## 📦 Key Dependencies
+## 📁 Artifact Storage
 
-| Package | Purpose |
-|---|---|
-| `langgraph` | Graph-based agent orchestration |
-| `langchain` + `langchain-google-genai` | LLM integration (Gemini) |
-| `langchain-tavily` | Web search tool |
-| `langchain-mcp-adapters` | MCP server integration |
-| `langchain-groq` | Groq LLM support |
-| `pydantic` | Structured data validation |
-| `jupyter` + `ipykernel` | Interactive notebooks |
-| `rich` | Beautiful terminal output |
+Generated research reports are saved to:
+`src/deep_research_from_scratch/files/report_<uuid>.md`

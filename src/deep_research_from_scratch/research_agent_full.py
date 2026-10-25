@@ -183,6 +183,6 @@ deep_researcher_builder.add_edge("supervisor_subgraph", "final_report_generation
 deep_researcher_builder.add_edge("final_report_generation", "save_report_to_file")
 deep_researcher_builder.add_edge("save_report_to_file", END)
 
-# Compile with MemorySaver so interrupts and cognitive state survive thread_id lookups
-# LangGraph API and Studio automatically manage checkpointer and persistence.
-agent = deep_researcher_builder.compile()
+# Compile with MemorySaver checkpointer so interrupts and cognitive state survive thread_id lookups
+agent = deep_researcher_builder.compile(checkpointer=ace_checkpointer)
+

@@ -73,9 +73,26 @@ async def run_scoping_and_planning_activity(
     snapshot = get_cognitive_snapshot(agent, thread_config)
     is_paused = bool(snapshot.get("_next_nodes"))
 
+    clarification_question: str | None = None
+    if not is_paused:
+        state_vals = agent.get_state(thread_config).values if agent.get_state(thread_config) else {}
+        messages = state_vals.get("messages", [])
+        for msg in reversed(messages):
+            if hasattr(msg, "type") and msg.type == "ai":
+                clarification_question = str(msg.content)
+                break
+        if clarification_question:
+            snapshot["clarification_question"] = clarification_question
+
     activity.logger.info(
         f"[Activity:Scoping] Scoping phase ended. Paused at checkpoint: {is_paused}. "
         f"Status: {snapshot.get('status', 'unknown')}"
+    )
+
+    status = (
+        ACE_STATUS_PAUSED
+        if is_paused
+        else ("clarification_needed" if clarification_question else snapshot.get("status", "scoping_complete"))
     )
 
     return ScopingOutput(
@@ -83,10 +100,11 @@ async def run_scoping_and_planning_activity(
         objective=snapshot.get("objective", request.objective),
         research_brief=snapshot.get("research_brief", ""),
         research_plan=snapshot.get("research_plan", ""),
-        status=snapshot.get("status", ACE_STATUS_PAUSED if is_paused else "clarification"),
+        status=status,
         is_paused=is_paused,
         cognitive_snapshot=snapshot,
     )
+
 
 
 @activity.defn

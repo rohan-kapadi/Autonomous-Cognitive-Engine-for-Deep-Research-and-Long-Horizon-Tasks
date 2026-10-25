@@ -33,6 +33,9 @@ WORKDIR /app
 # Copy project files
 COPY pyproject.toml uv.lock langgraph.json ./
 COPY src/ ./src/
+COPY temporal_integration/ ./temporal_integration/
+COPY demo_ace_temporal.py demo_ace_langsmith.py demo_ace_run.py test_ace_checkpoint.py ./
+COPY tests/ ./tests/
 COPY notebooks/ ./notebooks/
 
 # Install dependencies using uv

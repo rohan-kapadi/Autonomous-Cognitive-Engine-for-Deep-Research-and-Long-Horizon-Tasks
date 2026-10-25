@@ -174,3 +174,46 @@ async def test_transient_activity_failure_is_retried_and_succeeds():
             assert _transient_attempts == 2, "Activity should have succeeded on attempt 2"
             assert result.status == "complete"
             assert "Recovered brief" in result.cognitive_state.get("research_plan", "") or result.final_report
+
+
+@activity.defn(name="run_scoping_and_planning_activity")
+async def mock_clarification_scoping_activity(request: ResearchWorkflowInput) -> ScopingOutput:
+    return ScopingOutput(
+        thread_id="test-clarify-thread",
+        objective=request.objective,
+        research_brief="",
+        research_plan="",
+        status="clarification_needed",
+        is_paused=False,
+        cognitive_snapshot={
+            "objective": request.objective,
+            "clarification_question": "Please specify whether your focus is on open-source or commercial LLMs.",
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_scoping_clarification_path_returns_clarification_needed():
+    """Verify that when scoping asks for user clarification, the workflow returns clarification_needed."""
+    async with await WorkflowEnvironment.start_time_skipping() as env:
+        worker = Worker(
+            env.client,
+            task_queue="test-clarify-queue",
+            workflows=[ACEResearchWorkflow],
+            activities=[mock_clarification_scoping_activity, mock_research_activity],
+        )
+        async with worker:
+            input_data = ResearchWorkflowInput(
+                objective="AI Agents",  # Vague topic requiring clarification
+                auto_approve=False,
+            )
+            result = await env.client.execute_workflow(
+                ACEResearchWorkflow.run,
+                input_data,
+                id="test-wf-clarify-001",
+                task_queue="test-clarify-queue",
+            )
+            assert result.status == "clarification_needed"
+            assert result.approved is False
+            assert "commercial LLMs" in result.final_report
+

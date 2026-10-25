@@ -72,10 +72,33 @@ class ACEResearchWorkflow:
 
         self._thread_id = self._scoping_output.thread_id
 
+        # If scoping did not pause because it requested clarification from the user
+        if not self._scoping_output.is_paused and not self._scoping_output.research_plan:
+            self._status = "clarification_needed"
+            clarification_msg = self._scoping_output.cognitive_snapshot.get(
+                "clarification_question",
+                "User clarification is required before generating a research plan."
+            )
+            workflow.logger.info(
+                f"[Workflow:{workflow_id}] Scoping requested user clarification: '{clarification_msg}'"
+            )
+            return ResearchWorkflowResult(
+                workflow_id=workflow_id,
+                thread_id=self._thread_id,
+                status="clarification_needed",
+                objective=self._objective,
+                final_report=clarification_msg,
+                report_filepath=None,
+                cognitive_state=self._scoping_output.cognitive_snapshot,
+                approved=False,
+                error_message=clarification_msg,
+            )
+
         # -------------------------------------------------------------
         # STAGE 2: Human-in-the-Loop Approval & Replanning Checkpoint
         # -------------------------------------------------------------
         resume_arg = "true"
+
 
         if not input_data.auto_approve and self._scoping_output.is_paused:
             self._status = "paused"
