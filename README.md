@@ -1,6 +1,8 @@
 # Autonomous Cognitive Engine (ACE) for Deep Research and Long-Horizon Tasks
 
 > **ACE is an open-source, stateful multi-agent research engine for complex, long-running research tasks. It combines planning, coordinated web research, human approval and replanning, explicit cognitive state, and Temporal-backed execution so users can inspect and steer research rather than treating it as an opaque one-shot LLM call.**
+>
+> 📄 **Architectural Whitepaper**: For an in-depth breakdown of the problem statement, traditional agent failure modes, and our durable solution architecture, see [`PROBLEM_STATEMENT_AND_SOLUTION.md`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/PROBLEM_STATEMENT_AND_SOLUTION.md).
 
 ---
 
