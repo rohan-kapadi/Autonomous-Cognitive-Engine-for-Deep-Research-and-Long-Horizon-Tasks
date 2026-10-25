@@ -67,3 +67,6 @@ htmlcov/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Temporal dev server state
+temporal.db*

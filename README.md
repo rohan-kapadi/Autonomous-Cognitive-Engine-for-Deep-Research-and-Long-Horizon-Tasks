@@ -205,6 +205,56 @@ Access services:
 
 ---
 
+### 6. Durable Execution with Temporal
+
+ACE research runs can take many minutes and dozens of LLM / search calls. The `ace_temporal/` package runs the pipeline as a **Temporal workflow** so a run survives worker crashes, waits durably for human approval, and exposes its cognitive state live.
+
+```mermaid
+flowchart LR
+    CLI[ace_temporal.cli] -->|start / signals / query| T[(Temporal Server)]
+    T --> W[ACE Worker]
+    W --> A1[scope_objective]
+    A1 -->|clarify signal| A1
+    A1 --> CP{{Checkpoint: approve / replan signal}}
+    CP -->|replan| A1
+    CP -->|approve| A2[run_research - heartbeats]
+    A2 --> A3[write_report]
+    A3 --> A4[save_report]
+```
+
+| Temporal feature | What it gives ACE |
+|---|---|
+| Activities per phase | Each phase is checkpointed; a crash only re-runs the phase in flight |
+| Retry policy (exponential backoff) | Automatic recovery from LLM rate limits and transient failures |
+| Heartbeats (5s, 20s timeout) | A killed worker is detected fast and research is retried on a live worker |
+| Signals `clarify` / `approve` / `replan` | Durable human-in-the-loop: the run can wait hours or days at the checkpoint |
+| Query `cognitive_state` | Live ACE cognitive state (status, plan, tasks, decisions) without touching the run |
+
+**Run locally:**
+
+```bash
+# Terminal 1: Temporal dev server (Web UI at http://localhost:8233)
+temporal server start-dev --db-filename temporal.db
+
+# Terminal 2: worker
+uv run python -m ace_temporal.worker
+
+# Terminal 3: drive a research run
+uv run python -m ace_temporal.cli start "Research durable execution patterns for AI agents" --id ace-demo
+uv run python -m ace_temporal.cli status  ace-demo          # live cognitive state
+uv run python -m ace_temporal.cli clarify ace-demo "Focus on open-source runtimes"   # if asked
+uv run python -m ace_temporal.cli approve ace-demo          # or: replan ace-demo "new objective"
+uv run python -m ace_temporal.cli result  ace-demo
+```
+
+Or with Docker: `docker-compose up -d temporal ace-worker`, then use the CLI from the host.
+
+**Crash-recovery demo:** while status is `researching`, kill the worker (Ctrl+C) and start it again. The Temporal UI shows the heartbeat timeout and the `run_research` retry; scoping and the approval are **not** repeated.
+
+Test the workflow logic without API keys: `uv run python test_temporal_workflow.py`
+
+---
+
 ## Project Structure
 
 ```
