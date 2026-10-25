@@ -70,5 +70,8 @@ htmlcov/
 Thumbs.db
 Desktop.ini
 
-# Graphify cache
+# Graphify cache & backups
 graphify-out/cache/
+graphify-out/202*
+graphify-out/*.sig
+graphify-out/*.pending.json
