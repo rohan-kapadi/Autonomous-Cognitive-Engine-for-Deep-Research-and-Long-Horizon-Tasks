@@ -20,6 +20,8 @@ dependencies = [
     "pandas>=2.3.3",
     "traitlets==5.9.0",
     "langchain-groq>=0.1.0",
+    "temporalio>=1.8",
+    "python-dotenv>=1.1.1",
 ]
 
 [project.optional-dependencies]
