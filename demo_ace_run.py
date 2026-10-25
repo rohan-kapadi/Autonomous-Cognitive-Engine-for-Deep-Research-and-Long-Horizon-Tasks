@@ -45,8 +45,8 @@ async def main():
     state = graph.get_state(config)
     last_msg = state.values["messages"][-1]
     
-    # If agent asked for clarification, provide answer to continue
-    if state.next == ():
+    # If agent asked for clarification (no report produced), provide answer to continue
+    if not state.values.get("final_report"):
         print(f"\n[Agent Asked Clarification]:\n{last_msg.content[:200]}...\n")
         answer = "Yes, focus specifically on open-source agent runtime architectures with explicit checkpoint/resume cognitive states."
         print(f"[Turn 2] User Answers:\n{answer}\n")
@@ -54,9 +54,9 @@ async def main():
             for node_name in event.keys():
                 print(f"  -> Node completed: {node_name}")
 
-    # Inspect cognitive snapshot at checkpoint pause
+    # Inspect the persisted cognitive snapshot after the run
     snapshot = get_cognitive_snapshot(graph, config)
-    print_cognitive_state(snapshot, title="ACE Cognitive State (Paused at Checkpoint)")
+    print_cognitive_state(snapshot, title="ACE Cognitive State (Final)")
 
 if __name__ == "__main__":
     asyncio.run(main())
