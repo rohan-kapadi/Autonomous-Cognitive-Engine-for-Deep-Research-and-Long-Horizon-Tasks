@@ -4,21 +4,20 @@ This module implements the scoping phase of the research workflow, where we:
 1. Assess if the user's request needs clarification
 2. Generate a detailed research brief from the conversation
 
-Uses Groq (qwen/qwen3.8-27b) for lightning-fast (0.5s), reliable structured output in scoping steps.
+Uses the shared cognitive model (Jarvislabs Token Factory by default) for structured output in scoping steps.
 """
 
-import os
 from datetime import datetime
 from typing_extensions import Literal
 
 from langchain_core.messages import HumanMessage, AIMessage, get_buffer_string
-from langchain_groq import ChatGroq
 from langgraph.graph import StateGraph, START, END
 from langgraph.types import Command
 
 from deep_research_from_scratch.prompts import clarify_with_user_instructions, transform_messages_into_research_topic_prompt
 from deep_research_from_scratch.state_scope import AgentState, ClarifyWithUser, ResearchQuestion, AgentInputState
 from deep_research_from_scratch.retry_utils import ainvoke_with_retry
+from deep_research_from_scratch.gemma_model import get_cognitive_model
 
 # ===== UTILITY FUNCTIONS =====
 
@@ -30,9 +29,8 @@ def get_today_str() -> str:
         return datetime.now().strftime("%a %b %-d, %Y")
 
 # ===== CONFIGURATION =====
-# Fast, reliable structured output on Groq
-groq_key = os.getenv("GROQ_API_KEY")
-scoping_model = ChatGroq(model="qwen/qwen3.8-27b", api_key=groq_key, temperature=0.2)
+# Shared cognitive model (Jarvislabs by default, Groq fallback)
+scoping_model = get_cognitive_model()
 
 # ===== WORKFLOW NODES =====
 

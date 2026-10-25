@@ -116,12 +116,18 @@ cp .env.example .env
 Fill in your API credentials:
 
 ```env
-# Primary Model: Google Gemma 4 (via Google GenAI)
+# Model provider for all agent steps: jarvislabs (default) | gemma | groq
+RESEARCH_MODEL_PROVIDER=jarvislabs
+
+# Primary Model: Gemma 4 via Jarvislabs Token Factory (OpenAI-compatible)
+JARVISLABS_API_KEY=your_jarvislabs_api_key_here
+JARVISLABS_MODEL=gemma-4-26b-a4b-it
+
+# Alternative: Gemma 4 via Google GenAI (RESEARCH_MODEL_PROVIDER=gemma)
 GOOGLE_API_KEY=your_google_api_key_here
-RESEARCH_MODEL_PROVIDER=gemma
 GEMMA_MODEL_NAME=gemma-4-26b-a4b-it
 
-# Fast Scoping Model: Groq
+# Optional fallback model: Groq
 GROQ_API_KEY=your_groq_api_key_here
 GROQ_MODEL=groq:qwen/qwen3.8-27b
 

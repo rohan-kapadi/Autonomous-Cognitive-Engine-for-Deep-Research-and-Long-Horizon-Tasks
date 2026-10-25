@@ -27,8 +27,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-# Ensure LangSmith tracing is active and mapped
-os.environ["LANGCHAIN_TRACING_V2"] = "true"
+# LangSmith tracing on by default; set LANGCHAIN_TRACING_V2=false in .env to disable
+os.environ.setdefault("LANGCHAIN_TRACING_V2", "true")
 if os.getenv("LANGSMITH_API_KEY") and not os.getenv("LANGCHAIN_API_KEY"):
     os.environ["LANGCHAIN_API_KEY"] = os.environ["LANGSMITH_API_KEY"]
 if not os.getenv("LANGCHAIN_PROJECT"):
@@ -49,7 +49,7 @@ CONFIG = {
     "configurable": {"thread_id": THREAD_ID},
     "metadata": {
         "engine": "ACE (Autonomous Cognitive Engine)",
-        "model": "gemma-4-26b-a4b-it",
+        "model": get_active_model_info()["model"],
         "demo": "persistent-cognitive-checkpoint",
     },
     "tags": ["ACE", "Gemma-4", "Checkpoint-Resume", "Hackathon-Demo"],
@@ -59,7 +59,14 @@ CONFIG = {
 DEFAULT_PROMPT = "What are the key benefits and patterns of long-term memory for autonomous AI agents?"
 
 
-def main():
+async def stream_nodes(graph_input):
+    """Stream the graph asynchronously (scoping nodes are async) and print each completed node."""
+    async for event in agent.astream(graph_input, CONFIG, stream_mode="updates"):
+        node_name = list(event.keys())[0] if event else "?"
+        print(f"  ✓ Completed node: {node_name}")
+
+
+async def main():
     print("\n" + "=" * 70)
     print("   ACE: AUTONOMOUS COGNITIVE ENGINE — LANGSMITH LIVE DEMO")
     print("=" * 70)
@@ -81,13 +88,16 @@ def main():
     print(">>> State graph is executing up to the cognitive checkpoint...")
 
     # Run up to checkpoint interrupt
-    for event in agent.stream(
-        {"messages": [HumanMessage(content=user_query)]},
-        CONFIG,
-        stream_mode="updates"
-    ):
-        node_name = list(event.keys())[0] if event else "?"
-        print(f"  ✓ Completed node: {node_name}")
+    await stream_nodes({"messages": [HumanMessage(content=user_query)]})
+
+    # The scoping agent may ask a clarifying question first; answer until it reaches the checkpoint
+    while not agent.get_state(CONFIG).next:
+        question = agent.get_state(CONFIG).values["messages"][-1].content
+        print(f"\n[Agent asks] {question}")
+        answer = input("Your answer (or 'q' to quit):\n> ").strip()
+        if answer.lower() == "q":
+            return
+        await stream_nodes({"messages": [HumanMessage(content=answer)]})
 
     # Inspect paused cognitive state
     print("\n[Step 2] AGENT PAUSED AT CHECKPOINT!")
@@ -120,13 +130,7 @@ def main():
         print("\n>>> Resuming original cognitive plan...")
 
     print("\n[Step 3] Resuming agent from structured checkpoint...")
-    for event in agent.stream(
-        Command(resume=resume_arg),
-        CONFIG,
-        stream_mode="updates"
-    ):
-        node_name = list(event.keys())[0] if event else "?"
-        print(f"  ✓ Completed node: {node_name}")
+    await stream_nodes(Command(resume=resume_arg))
 
     print("\n[Step 4] Execution complete!")
     final_snapshot = get_cognitive_snapshot(agent, CONFIG)
@@ -136,4 +140,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
