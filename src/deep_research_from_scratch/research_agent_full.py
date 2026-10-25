@@ -3,17 +3,12 @@
 This module integrates all components of the research system:
 - User clarification and scoping
 - Research brief generation (with ACE cognitive state population)
-- Human-in-the-loop interrupt after planning (checkpoint/resume demo point)
 - Multi-agent research coordination
 - Final report generation
 
 ACE changes (additive only):
-- Graph compiled with MemorySaver checkpointer so state survives interrupts.
 - ``write_research_brief`` node populates cognitive state fields on AgentState.
-- ``checkpoint_and_resume`` node fires an interrupt() after brief generation,
-  making the full cognitive plan visible before research begins.
-  Caller resumes with ``Command(resume=True)`` to continue, or
-  ``Command(resume={"replan": "new objective"})`` to override the objective.
+- ``populate_cognitive_state`` captures the objective/plan and sets status.
 - ``final_report_generation`` marks status as complete.
 """
 
@@ -21,15 +16,12 @@ import os
 import uuid
 from langchain_core.messages import HumanMessage
 from langgraph.graph import StateGraph, START, END
-from langgraph.types import interrupt, Command
 
 from deep_research_from_scratch.utils import get_today_str
 from deep_research_from_scratch.prompts import final_report_generation_prompt
 from deep_research_from_scratch.state_scope import (
     AgentState,
     AgentInputState,
-    ACE_STATUS_PLANNING,
-    ACE_STATUS_PAUSED,
     ACE_STATUS_RESEARCHING,
     ACE_STATUS_COMPLETE,
 )
@@ -66,7 +58,7 @@ def populate_cognitive_state(state: AgentState) -> dict:
     return {
         "objective": objective or research_brief[:200],
         "research_plan": research_brief,
-        "status": ACE_STATUS_PLANNING,
+        "status": ACE_STATUS_RESEARCHING,
         # Initialise accumulators — safe no-ops if already populated
         "tasks": [],
         "completed_tasks": [],
@@ -77,38 +69,6 @@ def populate_cognitive_state(state: AgentState) -> dict:
     }
 
 
-# ===== ACE: CHECKPOINT / INTERRUPT =====
-
-def checkpoint_and_resume(state: AgentState) -> dict:
-    """Interrupt point between planning and research execution.
-
-    The graph pauses here after the research brief is ready.
-    The full cognitive state is visible via get_state() at this point.
-
-    Resume options:
-      graph.invoke(Command(resume=True), config)         → proceed with original plan
-      graph.invoke(Command(resume={"replan": "..."}), config) → override objective
-    """
-    print("\n[ACE] Cognitive state is ready. Graph pausing for checkpoint.")
-    print("[ACE] Resume with: graph.invoke(Command(resume=True), thread_config)")
-
-    resume_value = interrupt({
-        "status": ACE_STATUS_PAUSED,
-        "objective": state.get("objective", ""),
-        "research_plan": state.get("research_plan", ""),
-        "message": "ACE is ready to begin research. Resume to proceed.",
-    })
-
-    # Handle optional replan from the resume value
-    updates: dict = {"status": ACE_STATUS_RESEARCHING}
-    if isinstance(resume_value, dict) and "replan" in resume_value:
-        new_objective = resume_value["replan"]
-        updates["objective"] = new_objective
-        updates["research_plan"] = new_objective
-        updates["decisions"] = [f"User replanned at checkpoint: {new_objective[:120]}"]
-        print(f"[ACE] Replanning with new objective: {new_objective}")
-
-    return updates
 
 
 # ===== FINAL REPORT GENERATION =====
@@ -169,20 +129,17 @@ deep_researcher_builder = StateGraph(AgentState, input_schema=AgentInputState)
 deep_researcher_builder.add_node("clarify_with_user", clarify_with_user)
 deep_researcher_builder.add_node("write_research_brief", write_research_brief)
 deep_researcher_builder.add_node("populate_cognitive_state", populate_cognitive_state)  # ACE: cognitive init
-deep_researcher_builder.add_node("checkpoint_and_resume", checkpoint_and_resume)        # ACE: interrupt
 deep_researcher_builder.add_node("supervisor_subgraph", supervisor_agent)
 deep_researcher_builder.add_node("final_report_generation", final_report_generation)
 deep_researcher_builder.add_node("save_report_to_file", save_report_to_file)
 
 # Add workflow edges
 deep_researcher_builder.add_edge(START, "clarify_with_user")
-deep_researcher_builder.add_edge("write_research_brief", "populate_cognitive_state")   # ACE: populate first
-deep_researcher_builder.add_edge("populate_cognitive_state", "checkpoint_and_resume")  # ACE: then pause
-deep_researcher_builder.add_edge("checkpoint_and_resume", "supervisor_subgraph")
+deep_researcher_builder.add_edge("write_research_brief", "populate_cognitive_state")   # ACE: populate state
+deep_researcher_builder.add_edge("populate_cognitive_state", "supervisor_subgraph")    # ACE: then research
 deep_researcher_builder.add_edge("supervisor_subgraph", "final_report_generation")
 deep_researcher_builder.add_edge("final_report_generation", "save_report_to_file")
 deep_researcher_builder.add_edge("save_report_to_file", END)
 
-# Compile with MemorySaver so interrupts and cognitive state survive thread_id lookups
 # LangGraph API and Studio automatically manage checkpointer and persistence.
 agent = deep_researcher_builder.compile()

@@ -10,6 +10,7 @@ from typing_extensions import Literal
 
 from langgraph.graph import StateGraph, START, END
 from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage, filter_messages
+import asyncio
 from langchain.chat_models import init_chat_model
 
 from deep_research_from_scratch.state_research import ResearcherState, ResearcherOutputState
@@ -33,7 +34,7 @@ compress_model = get_cognitive_model()
 
 # ===== AGENT NODES =====
 
-def llm_call(state: ResearcherState):
+async def llm_call(state: ResearcherState):
     """Analyze current state and decide on next actions.
 
     The model analyzes the current conversation state and decides whether to:
@@ -41,30 +42,28 @@ def llm_call(state: ResearcherState):
     2. Provide a final answer based on gathered information
 
     Returns updated state with the model's response.
+    Async to avoid blocking the LangGraph server event loop.
     """
     prompt = research_agent_prompt.format(date=get_today_str()) if "{date}" in research_agent_prompt else research_agent_prompt
-    return {
-        "researcher_messages": [
-            invoke_with_retry(
-                model_with_tools,
-                [SystemMessage(content=prompt)] + state["researcher_messages"]
-            )
-        ]
-    }
+    messages = [SystemMessage(content=prompt)] + state["researcher_messages"]
+    response = await asyncio.to_thread(invoke_with_retry, model_with_tools, messages)
+    return {"researcher_messages": [response]}
 
-def tool_node(state: ResearcherState):
+async def tool_node(state: ResearcherState):
     """Execute all tool calls from the previous LLM response.
 
     Executes all tool calls from the previous LLM responses.
     Returns updated state with tool execution results.
+    Async to avoid blocking the LangGraph server event loop.
     """
     tool_calls = state["researcher_messages"][-1].tool_calls
 
-    # Execute all tool calls
-    observations = []
-    for tool_call in tool_calls:
-        tool = tools_by_name[tool_call["name"]]
-        observations.append(tool.invoke(tool_call["args"]))
+    # Execute all tool calls in thread pool to avoid blocking the event loop
+    async def run_tool(tool_call):
+        t = tools_by_name[tool_call["name"]]
+        return await asyncio.to_thread(t.invoke, tool_call["args"])
+
+    observations = await asyncio.gather(*[run_tool(tc) for tc in tool_calls])
 
     # Create tool message outputs
     tool_outputs = [
@@ -77,21 +76,22 @@ def tool_node(state: ResearcherState):
 
     return {"researcher_messages": tool_outputs}
 
-def compress_research(state: ResearcherState) -> dict:
+async def compress_research(state: ResearcherState) -> dict:
     """Compress research findings into a concise summary.
 
     Takes all the research messages and tool outputs and creates
     a compressed summary suitable for the supervisor's decision-making.
+    Async to avoid blocking the LangGraph server event loop.
     """
 
     system_message = compress_research_system_prompt.format(date=get_today_str())
     messages = [SystemMessage(content=system_message)] + state.get("researcher_messages", []) + [HumanMessage(content=compress_research_human_message)]
-    response = compress_model.invoke(messages)
+    response = await asyncio.to_thread(compress_model.invoke, messages)
 
     # Extract raw notes from tool and AI messages
     raw_notes = [
         str(m.content) for m in filter_messages(
-            state["researcher_messages"], 
+            state["researcher_messages"],
             include_types=["tool", "ai"]
         )
     ]
