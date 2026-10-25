@@ -7,6 +7,8 @@
 ## 📌 Project Status & Implementation Caveats
 
 - **Active Branch**: `temporal` (tested with Python 3.11, 3.12, and 3.13 via Astral `uv`).
+- **Upstream Sync**: Synchronized with `main` (commit `133eaf9`), incorporating non-blocking async research compression (`asyncio.to_thread`) while preserving the full human-in-the-loop checkpoint and Temporal durable execution.
+- **Dependency Status**: Fully locked and verified with `uv pip check` (188 packages compatible; includes `temporalio[langgraph,langsmith]==1.34.0`, `langgraph==1.2.17`, `langchain==1.4.6`, `langsmith==0.12.6`).
 - **Dual Execution Modes**:
   1. **Primary Production Execution (Recommended)**: Temporal Workflow + Failure-Isolated Activities ([`temporal_integration/workflows.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/temporal_integration/workflows.py), [`temporal_integration/activities.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/temporal_integration/activities.py)). Coordinates scoping, human checkpoint pause, multi-agent research, and report generation with bounded retries, timeouts, and zero-CPU idle wait states.
   2. **Experimental Adapter**: Node-level Temporal LangGraphPlugin adapter ([`temporal_integration/adapters.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/temporal_integration/adapters.py)). Maps individual LangGraph nodes to Temporal execution metadata (`execute_in="activity"` vs `"workflow"`).
@@ -14,6 +16,7 @@
   - **LangGraph Checkpoint State**: Managed via `MemorySaver`. Operates within single Python worker processes for graph pauses and resumes. It does *not* survive process termination by itself unless backed by a persistent checkpointer.
   - **Temporal Workflow History**: Persisted on the Temporal Server. Survives worker crashes, worker restarts, and machine reboots. Workflows replay deterministically from their event log.
   - **Report Artifacts**: Persisted to local disk (`src/deep_research_from_scratch/files/report_<id>.md`) or mounted Docker volumes. Survives application and worker restarts.
+
 
 ---
 
@@ -348,11 +351,30 @@ git clone -b temporal https://github.com/rohan-kapadi/Autonomous-Cognitive-Engin
 cd Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks
 ```
 
-### 2. Install Locked Dependencies
+### 2. Install Locked Dependencies & Verify Environment
 
 ```bash
+# Install locked dependencies including temporalio, langgraph, and dev tools
 uv sync --extra dev
+
+# Verify dependency resolution and compatibility
+uv pip check
 ```
+
+#### Core Installed Dependencies
+
+| Package | Version | Purpose |
+|---|---|---|
+| `temporalio` | `1.34.0` | Temporal Python SDK with `[langgraph,langsmith]` extras |
+| `langgraph` | `1.2.17` | Stateful agent runtime, state graphs, and `interrupt()` primitives |
+| `langchain` | `1.4.6` | Agent composition framework and chat model abstractions |
+| `langsmith` | `0.12.6` | Observability tracing and span linking |
+| `pydantic` | `2.11.7` | High-performance structured output and data contract validation |
+| `langchain-google-genai` | `4.1.3` | Google Gemini & Gemma 4 integration (`gemma-4-26b-a4b-it`) |
+| `langchain-groq` | `1.1.2` | Fast scoping and clarification fallback (`qwen/qwen3.8-27b`) |
+| `tavily-python` | `0.7.10` | Web retrieval and real-time evidence gathering |
+| `pytest` | `9.1.1` | Automated test runner |
+
 
 ### 3. Configure Environment Variables
 
@@ -455,18 +477,22 @@ Services exposed:
 The test suite runs 100% offline with zero external API dependencies (all external LLM, Tavily, and Temporal server calls are mocked or execute in an in-memory test environment):
 
 ```bash
-# Run all tests
-uv run pytest tests/
+# Verify all environment dependencies are compatible
+uv pip check
+
+# Run all automated tests with verbose test execution output
+uv run pytest tests/ -v
 ```
 
-### Test Suite Breakdown
+### Test Suite Breakdown (15 Tests Passed)
 
-| Test File | Tests | What It Proves |
-|---|---|---|
-| [`tests/test_existing_behavior.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_existing_behavior.py) | 5 passed | Core LangGraph nodes, transitions, cognitive state initializers, and plugin adapters remain intact. |
-| [`tests/test_temporal_workflow.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_temporal_workflow.py) | 4 passed | Workflow lifecycle, empty objective validation, activity retry policy with backoff, and scoping clarification handling. |
-| [`tests/test_human_resume.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_human_resume.py) | 3 passed | Human approval signal, dynamic replan directive propagation, and plan rejection handling. |
-| [`tests/test_langsmith_integration.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_langsmith_integration.py) | 3 passed | LangSmith plugin configuration, consistent project naming, and workflow execution with plugin attached. |
+| Test Suite | Tests | Status | What It Proves |
+|---|---|---|---|
+| [`tests/test_existing_behavior.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_existing_behavior.py) | 5 passed | ✅ Passing | Core LangGraph nodes, transitions, cognitive state initializers, and plugin adapters remain intact. |
+| [`tests/test_temporal_workflow.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_temporal_workflow.py) | 4 passed | ✅ Passing | Workflow lifecycle, empty objective validation, activity retry policy with backoff, and scoping clarification handling. |
+| [`tests/test_human_resume.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_human_resume.py) | 3 passed | ✅ Passing | Human approval signal, dynamic replan directive propagation, and plan rejection handling. |
+| [`tests/test_langsmith_integration.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_langsmith_integration.py) | 3 passed | ✅ Passing | LangSmith plugin configuration, consistent project naming, and workflow execution with plugin attached. |
+
 
 ---
 

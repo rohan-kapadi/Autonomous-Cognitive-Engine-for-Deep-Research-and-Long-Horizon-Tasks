@@ -35,15 +35,16 @@ git clone -b temporal https://github.com/rohan-kapadi/Autonomous-Cognitive-Engin
 cd Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks
 ```
 
-### 2. Install Dependencies
+### 2. Install Dependencies & Verify Environment
 
 ```bash
-# Install locked dependencies including temporalio, langgraph, and langchain
-uv sync
-
-# Or include development/testing packages
+# Install locked dependencies including temporalio, langgraph, and dev/testing packages
 uv sync --extra dev
+
+# Verify virtual environment dependency compatibility
+uv pip check
 ```
+
 
 ### 3. Configure Environment Variables
 
