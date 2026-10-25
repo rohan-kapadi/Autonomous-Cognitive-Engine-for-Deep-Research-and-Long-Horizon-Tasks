@@ -60,6 +60,25 @@ class ApprovalRequest(BaseModel):
 class ReplanRequest(BaseModel):
     directive: str = Field(..., description="Instructions to guide supervisor replanning")
 
+class ChatMessage(BaseModel):
+    role: str = "user"
+    content: str
+
+class ChatRequest(BaseModel):
+    message: str
+    messages: List[ChatMessage] = Field(default_factory=list)
+
+class ChatResponse(BaseModel):
+    reply: str
+    need_clarification: bool = False
+    verification: Optional[str] = None
+    suggested_brief: Optional[str] = None
+    ready_for_plan: bool = False
+
+class PlanRequest(BaseModel):
+    objective: str
+    scope_notes: Optional[str] = None
+
 # In-Memory Run Registry (for active sessions)
 RUNS_REGISTRY: Dict[str, Dict[str, Any]] = {}
 
@@ -101,6 +120,168 @@ def get_health() -> Dict[str, Any]:
 def list_runs() -> List[Dict[str, Any]]:
     """Return all active and completed research runs."""
     return list(RUNS_REGISTRY.values())
+
+@app.post("/api/chat", response_model=ChatResponse)
+async def chat_scoping(req: ChatRequest) -> ChatResponse:
+    """Conversational scoping assistant. Analyzes objectives, detects ambiguities, and prepares a research brief."""
+    msg = req.message.strip()
+    history = req.messages
+    
+    # Check for quick greetings / help requests
+    if msg.lower() in ["hi", "hello", "hey", "help", "what is ace", "who are you"]:
+        return ChatResponse(
+            reply=(
+                "I am ACE (Autonomous Cognitive Engine). I help you transform complex, long-horizon questions "
+                "into structured multi-agent research missions with human-in-the-loop checkpoints.\n\n"
+                "To get started, tell me what technical domain or problem you want to investigate—for example:\n"
+                "• 'Compare solid-state and lithium-ion battery energy density for EV engineers'\n"
+                "• 'Analyze persistent memory architectures in autonomous AI agents and evaluate trade-offs'\n"
+                "• 'Audit compliance requirements under the EU AI Act for multi-agent workflows'"
+            ),
+            need_clarification=True,
+            ready_for_plan=False
+        )
+
+    # Try running through the real ACE scoping node if configured
+    try:
+        from deep_research_from_scratch.research_agent_scope import (
+            scoping_model,
+            clarify_with_user_instructions,
+            transform_messages_into_research_topic_prompt,
+            get_today_str,
+        )
+        from deep_research_from_scratch.state_scope import ClarifyWithUser, ResearchQuestion
+        from langchain_core.messages import HumanMessage, AIMessage, get_buffer_string
+        
+        chat_msgs = []
+        for m in history:
+            if m.role == "user":
+                chat_msgs.append(HumanMessage(content=m.content))
+            else:
+                chat_msgs.append(AIMessage(content=m.content))
+        chat_msgs.append(HumanMessage(content=msg))
+
+        structured_model = scoping_model.with_structured_output(ClarifyWithUser)
+        clarify_res = await structured_model.ainvoke([
+            HumanMessage(content=clarify_with_user_instructions.format(
+                messages=get_buffer_string(chat_msgs),
+                date=get_today_str()
+            ))
+        ])
+        
+        if clarify_res.need_clarification:
+            return ChatResponse(
+                reply=clarify_res.question,
+                need_clarification=True,
+                ready_for_plan=False
+            )
+        else:
+            brief_model = scoping_model.with_structured_output(ResearchQuestion)
+            brief_res = await brief_model.ainvoke([
+                HumanMessage(content=transform_messages_into_research_topic_prompt.format(
+                    messages=get_buffer_string(chat_msgs),
+                    date=get_today_str()
+                ))
+            ])
+            return ChatResponse(
+                reply=f"Objective verified: {clarify_res.verification}\n\nI have generated the research brief:\n\n{brief_res.research_brief}\n\nReady to formulate the execution plan for human review.",
+                need_clarification=False,
+                verification=clarify_res.verification,
+                suggested_brief=brief_res.research_brief,
+                ready_for_plan=True
+            )
+    except Exception:
+        # Resilient domain-informed scoping fallback (offline / missing API key)
+        words = msg.split()
+        if len(words) < 4:
+            return ChatResponse(
+                reply=f"'{msg}' is quite broad. Could you specify which aspects, target domain, or constraints to focus on? (e.g. application segment, evaluation criteria, or time horizon)",
+                need_clarification=True,
+                ready_for_plan=False
+            )
+        
+        brief = (
+            f"RESEARCH BRIEF: Autonomous Investigation into {msg}\n\n"
+            f"1. Core Objective: Systematically investigate {msg}, establish empirical evidence, and identify technical trade-offs.\n"
+            f"2. Scope: Analyze architectural patterns, state-of-the-art benchmarks, known failure modes, and open questions.\n"
+            f"3. Method: Multi-agent supervisor decomposition with isolated researcher context windows and Temporal durability checkpoints."
+        )
+        return ChatResponse(
+            reply=(
+                f"Scope confirmed for: '{msg}'.\n\n"
+                f"I have established the research brief:\n\n{brief}\n\n"
+                "The brief is ready. Click 'GENERATE PLAN' to review the task graph and human approval checkpoint."
+            ),
+            need_clarification=False,
+            verification="Objective defined with clear scope constraints.",
+            suggested_brief=brief,
+            ready_for_plan=True
+        )
+
+@app.post("/api/research/plan")
+async def generate_plan(req: PlanRequest) -> Dict[str, Any]:
+    """Generate structured tasks and cognitive state for human approval review."""
+    topic = req.objective
+    tasks = [
+        {
+            "id": "t-scope",
+            "title": "Problem Scoping & Constraint Analysis",
+            "agent": "Scoping Specialist",
+            "status": "completed",
+            "deliverable": "Formal research brief and boundary definitions."
+        },
+        {
+            "id": "t-supervise",
+            "title": "Supervisor Decomposition & Search Formulation",
+            "agent": "Lead Supervisor",
+            "status": "pending",
+            "deliverable": "3 targeted search tracks and parallel query execution."
+        },
+        {
+            "id": "t-research",
+            "title": "Multi-Agent Evidence Gathering & Web Retrieval",
+            "agent": "Research Specialist Alpha",
+            "status": "pending",
+            "deliverable": "Extracted empirical citations and web findings."
+        },
+        {
+            "id": "t-compress",
+            "title": "Context Compression & Deduplication",
+            "agent": "Context Compressor",
+            "status": "pending",
+            "deliverable": "Compressed knowledge base preserving vital metrics."
+        },
+        {
+            "id": "t-checkpoint",
+            "title": "Cognitive Checkpoint Pause (Temporal Signal)",
+            "agent": "Human Reviewer",
+            "status": "waiting_for_approval",
+            "deliverable": "Human decision gate: approve, replan directive, or abort."
+        },
+        {
+            "id": "t-report",
+            "title": "Gemma 4 Report Synthesis & Dossier Export",
+            "agent": "Report Synthesizer",
+            "status": "pending",
+            "deliverable": "Publication-grade markdown report saved to /files/."
+        }
+    ]
+    return {
+        "objective": topic,
+        "brief": req.scope_notes or f"Autonomous investigation into {topic}",
+        "tasks": tasks,
+        "unresolved_questions": [
+            f"What are the main implementation trade-offs for {topic[:40]}?",
+            "What empirical benchmarks and failure modes have been documented?",
+            "How does durability / checkpointing affect system reliability?"
+        ],
+        "deliverables": [
+            "Executive Dossier (.md file in /files/)",
+            "Deduplicated Evidence Bibliography",
+            "Cognitive State Trajectory Snapshot"
+        ],
+        "status": "ready_for_approval"
+    }
 
 @app.post("/api/research/start")
 async def start_research(req: StartResearchRequest) -> Dict[str, Any]:

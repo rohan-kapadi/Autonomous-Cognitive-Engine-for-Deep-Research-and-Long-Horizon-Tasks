@@ -13,20 +13,32 @@ import { ResearchRunsList } from './components/ResearchRunsList';
 import { SourcesExplorer } from './components/SourcesExplorer';
 import { ReportReader } from './components/ReportReader';
 import { SystemSettings } from './components/SystemSettings';
+import { LandingPage } from './components/LandingPage';
+import { ResearchChatbot } from './components/ResearchChatbot';
+import { PlanReviewView } from './components/PlanReviewView';
 import { INITIAL_RUNS } from './data/mockData';
 import { ResearchRun, SourceItem, WorkflowStage } from './types/research';
-import { Play, Pause, RotateCcw, FileText, CheckCircle2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, FileText, CheckCircle2, MessageSquareCode } from 'lucide-react';
 
 export const App: React.FC = () => {
   // Application State
   const [runs, setRuns] = useState<ResearchRun[]>(INITIAL_RUNS);
   const [activeRunId, setActiveRunId] = useState<string>(INITIAL_RUNS[0].runId);
-  const [activeView, setActiveView] = useState<ActiveView>('studio');
+  const [activeView, setActiveView] = useState<ActiveView>('landing');
   const [navCollapsed, setNavCollapsed] = useState<boolean>(false);
   const [selectedStageId, setSelectedStageId] = useState<string | null>('scoping');
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState<boolean>(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  // Stage 02 / 03 Interactive Scoping & Plan State
+  const [isChatDrawerOpen, setIsChatDrawerOpen] = useState<boolean>(false);
+  const [activeObjective, setActiveObjective] = useState<string>(
+    'Investigate how persistent memory architectures affect the reliability of autonomous AI agents. Compare major approaches, evidence, limitations, and implementation trade-offs.'
+  );
+  const [activeBrief, setActiveBrief] = useState<string>(
+    'RESEARCH BRIEF: Investigation into Persistent Memory Architectures for Autonomous AI Agents\n\n1. Core Objective: Systematically analyze how persistent memory architectures (vector storage, episodic memory, and durable checkpoint graphs) affect long-horizon task completion and agent reliability.\n2. Scope: Compare leading approaches against architectural failure modes (context drift, state corruption, unbounded latency).\n3. Deliverable: Structured research dossier with benchmarked trade-offs, architecture patterns, and empirical recommendations.'
+  );
 
   // Textmode Matrix Controls State (extension.textmode.art inspired)
   const [textmodeVisible, setTextmodeVisible] = useState<boolean>(false);
@@ -359,6 +371,36 @@ This report presents an empirical analysis of **${r.researchTopic}**. Using the 
     );
   };
 
+  // Handlers for 5-stage user journey
+  const handleProceedToPlan = (objective: string, brief: string) => {
+    setActiveObjective(objective);
+    setActiveBrief(brief);
+    setIsChatDrawerOpen(false);
+    setActiveView('plan');
+  };
+
+  const handleApprovePlan = (objective: string, depth: string) => {
+    handleStartNewResearch(objective, depth, true, false);
+    setActiveView('studio');
+  };
+
+  const handleReplanDirective = (directive: string) => {
+    handleStartNewResearch(activeObjective, 'deep', true, false);
+    setActiveView('studio');
+    setTimeout(() => {
+      handleReplanWorkflow(directive);
+    }, 1200);
+  };
+
+  const handleStartDemo = (topic: string) => {
+    setActiveObjective(topic);
+    setActiveBrief(
+      `RESEARCH BRIEF: Investigation into ${topic}\n\n1. Core Objective: Systematically investigate ${topic}.\n2. Scope: Compare architectures, persistent memory trade-offs, and empirical benchmarks.\n3. Methodology: Multi-agent supervisor with LangGraph and Temporal durability.`
+    );
+    handleStartNewResearch(topic, 'deep', true, false);
+    setActiveView('studio');
+  };
+
   return (
     <div
       className={`crt-overlay ${crtEnabled ? 'crt-enabled' : ''}`}
@@ -401,194 +443,276 @@ This report presents an empirical analysis of **${r.researchTopic}**. Using the 
         setVisible={setTextmodeVisible}
       />
 
-      {/* Persistent Top Bar */}
-      <TopBar
-        runId={currentRun.runId}
-        status={currentRun.status}
-        isApprovalRequired={currentRun.isApprovalRequired}
-        onToggleDrawer={() => setIsDrawerOpen(!isDrawerOpen)}
-        isDrawerOpen={isDrawerOpen}
-        onToggleTextmode={() => setTextmodeVisible(!textmodeVisible)}
-        isTextmodeOpen={textmodeVisible}
-        theme={theme}
-        onToggleTheme={toggleTheme}
-      />
+      {/* ===================================================================
+          STAGE 01: LANDING PAGE (Textmode Overlay Inspired)
+          =================================================================== */}
+      {activeView === 'landing' ? (
+        <div style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 20 }}>
+          <LandingPage
+            onStartChat={() => setActiveView('chat')}
+            onEnterStudio={() => setActiveView('studio')}
+            onStartDemo={handleStartDemo}
+          />
+        </div>
+      ) : (
+        /* ===================================================================
+           STAGES 02-05: APPLICATION WORKSPACE SHELL
+           =================================================================== */
+        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
+          {/* Persistent Top Bar with stage switcher */}
+          <TopBar
+            runId={currentRun.runId}
+            status={currentRun.status}
+            isApprovalRequired={currentRun.isApprovalRequired}
+            onToggleDrawer={() => setIsDrawerOpen(!isDrawerOpen)}
+            isDrawerOpen={isDrawerOpen}
+            onToggleTextmode={() => setTextmodeVisible(!textmodeVisible)}
+            isTextmodeOpen={textmodeVisible}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+            activeView={activeView}
+            onNavigateView={setActiveView}
+          />
 
-      {/* Shell Workspace Body */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative', zIndex: 10 }}>
-        {/* Navigation Sidebar */}
-        <NavigationSidebar
-          activeView={activeView}
-          setActiveView={setActiveView}
-          collapsed={navCollapsed}
-          setCollapsed={setNavCollapsed}
-          onNewResearch={() => setActiveView('overview')}
-        />
+          {/* Shell Workspace Body */}
+          <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative', zIndex: 10 }}>
+            {/* Navigation Sidebar */}
+            <NavigationSidebar
+              activeView={activeView}
+              setActiveView={setActiveView}
+              collapsed={navCollapsed}
+              setCollapsed={setNavCollapsed}
+              onNewResearch={() => setActiveView('chat')}
+            />
 
-        {/* Primary View Routing Canvas */}
-        <main
-          style={{
-            flex: 1,
-            height: 'calc(100vh - var(--topbar-height))',
-            overflowY: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-            position: 'relative',
-          }}
-        >
-          {/* VIEW: STUDIO */}
-          {activeView === 'studio' && (
-            <div style={{ display: 'flex', flex: 1, height: '100%', overflow: 'hidden' }}>
-              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-                {/* Research Objective Header Banner */}
-                <div
-                  className="border-b-hairline"
-                  style={{
-                    background: 'var(--bg-surface)',
-                    padding: '16px 20px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    gap: '16px',
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <span className="mono-data" style={{ color: 'var(--accent-lime)', fontSize: '11px' }}>
-                        ACTIVE INVESTIGATION // {currentRun.runId}
-                      </span>
-                      <span style={{ color: 'var(--text-tertiary)' }}>•</span>
-                      <span className="text-meta" style={{ fontSize: '10px' }}>
-                        STARTED: {currentRun.startTime}
-                      </span>
+            {/* Primary View Routing Canvas */}
+            <main
+              style={{
+                flex: 1,
+                height: 'calc(100vh - var(--topbar-height))',
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative',
+              }}
+            >
+              {/* STAGE 02: AI RESEARCH CHATBOT (Full View) */}
+              {activeView === 'chat' && (
+                <div style={{ flex: 1, height: '100%', overflow: 'hidden' }}>
+                  <ResearchChatbot
+                    isOpen={true}
+                    isFullView={true}
+                    onClose={() => setActiveView('landing')}
+                    onProceedToPlan={handleProceedToPlan}
+                  />
+                </div>
+              )}
+
+              {/* STAGE 03: PLAN GENERATION & HUMAN APPROVAL */}
+              {activeView === 'plan' && (
+                <div style={{ flex: 1, height: '100%', overflowY: 'auto' }}>
+                  <PlanReviewView
+                    objective={activeObjective}
+                    brief={activeBrief}
+                    onApprove={handleApprovePlan}
+                    onReplan={handleReplanDirective}
+                    onEditScope={() => setActiveView('chat')}
+                  />
+                </div>
+              )}
+
+              {/* STAGE 04: RESEARCH STUDIO (Live Workspace Canvas) */}
+              {activeView === 'studio' && (
+                <div style={{ display: 'flex', flex: 1, height: '100%', overflow: 'hidden' }}>
+                  <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                    {/* Research Objective Header Banner */}
+                    <div
+                      className="border-b-hairline"
+                      style={{
+                        background: 'var(--bg-surface)',
+                        padding: '16px 20px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        gap: '16px',
+                      }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span className="mono-data" style={{ color: 'var(--accent-lime)', fontSize: '11px' }}>
+                            ACTIVE INVESTIGATION // {currentRun.runId}
+                          </span>
+                          <span style={{ color: 'var(--text-tertiary)' }}>•</span>
+                          <span className="text-meta" style={{ fontSize: '10px' }}>
+                            STARTED: {currentRun.startTime}
+                          </span>
+                        </div>
+
+                        <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                          {currentRun.title}
+                        </h2>
+                        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.45, maxWidth: '780px' }}>
+                          {currentRun.researchTopic}
+                        </p>
+                      </div>
+
+                      {/* Top Actions */}
+                      <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                        {currentRun.finalReport && (
+                          <button
+                            onClick={() => setActiveView('reports')}
+                            className="btn btn-primary"
+                            style={{ fontSize: '11px', padding: '6px 12px' }}
+                          >
+                            <FileText size={12} />
+                            VIEW REPORT
+                          </button>
+                        )}
+                        {currentRun.isApprovalRequired && (
+                          <button
+                            onClick={() => setIsApprovalModalOpen(true)}
+                            className="btn btn-amber"
+                            style={{ fontSize: '11px', padding: '6px 12px' }}
+                          >
+                            REVIEW PLAN
+                          </button>
+                        )}
+                      </div>
                     </div>
 
-                    <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
-                      {currentRun.title}
-                    </h2>
-                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.45, maxWidth: '780px' }}>
-                      {currentRun.researchTopic}
-                    </p>
+                    {/* Workflow Canvas */}
+                    <WorkflowCanvas
+                      stages={currentRun.stages}
+                      selectedStageId={selectedStageId}
+                      onSelectStage={(id) => setSelectedStageId(id)}
+                      isApprovalRequired={currentRun.isApprovalRequired}
+                      onOpenApproval={() => setIsApprovalModalOpen(true)}
+                    />
                   </div>
 
-                  {/* Top Actions */}
-                  <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                    {currentRun.finalReport && (
-                      <button
-                        onClick={() => setActiveView('reports')}
-                        className="btn btn-primary"
-                        style={{ fontSize: '11px', padding: '6px 12px' }}
-                      >
-                        <FileText size={12} />
-                        VIEW REPORT
-                      </button>
-                    )}
-                    {currentRun.isApprovalRequired && (
-                      <button
-                        onClick={() => setIsApprovalModalOpen(true)}
-                        className="btn btn-amber"
-                        style={{ fontSize: '11px', padding: '6px 12px' }}
-                      >
-                        REVIEW PLAN
-                      </button>
-                    )}
+                  {/* Contextual Right Inspector */}
+                  <ContextInspector
+                    stage={selectedStage}
+                    tasks={currentRun.tasks}
+                    sources={currentRun.sources}
+                    cognitiveState={currentRun.cognitiveState}
+                    onClose={() => setSelectedStageId(null)}
+                    onOpenSource={() => setActiveView('sources')}
+                  />
+                </div>
+              )}
+
+              {/* VIEW: OVERVIEW */}
+              {activeView === 'overview' && (
+                <div style={{ flex: 1, overflowY: 'auto' }}>
+                  <OverviewDashboard
+                    currentRun={currentRun}
+                    runs={runs}
+                    onSelectRun={(id) => {
+                      setActiveRunId(id);
+                      setActiveView('studio');
+                    }}
+                    onNewResearch={() => setActiveView('chat')}
+                    onOpenApproval={() => setIsApprovalModalOpen(true)}
+                  />
+
+                  {/* Objective Composer Embedded in Overview */}
+                  <div style={{ borderTop: '1px solid var(--border-color)', marginTop: 'var(--space-2xl)' }}>
+                    <ResearchObjectiveComposer onSubmit={handleStartNewResearch} isLoading={false} />
                   </div>
                 </div>
+              )}
 
-                {/* Workflow Canvas */}
-                <WorkflowCanvas
-                  stages={currentRun.stages}
-                  selectedStageId={selectedStageId}
-                  onSelectStage={(id) => setSelectedStageId(id)}
-                  isApprovalRequired={currentRun.isApprovalRequired}
-                  onOpenApproval={() => setIsApprovalModalOpen(true)}
-                />
-              </div>
+              {/* VIEW: RUNS */}
+              {activeView === 'runs' && (
+                <div style={{ flex: 1, overflowY: 'auto' }}>
+                  <ResearchRunsList
+                    runs={runs}
+                    activeRunId={activeRunId}
+                    onSelectRun={(id) => {
+                      setActiveRunId(id);
+                      setActiveView('studio');
+                    }}
+                    onViewReport={(id) => {
+                      setActiveRunId(id);
+                      setActiveView('reports');
+                    }}
+                  />
+                </div>
+              )}
 
-              {/* Contextual Right Inspector */}
-              <ContextInspector
-                stage={selectedStage}
-                tasks={currentRun.tasks}
-                sources={currentRun.sources}
-                cognitiveState={currentRun.cognitiveState}
-                onClose={() => setSelectedStageId(null)}
-                onOpenSource={() => setActiveView('sources')}
-              />
-            </div>
-          )}
+              {/* VIEW: SOURCES */}
+              {activeView === 'sources' && (
+                <div style={{ flex: 1, overflowY: 'auto' }}>
+                  <SourcesExplorer sources={currentRun.sources} />
+                </div>
+              )}
 
-          {/* VIEW: OVERVIEW */}
-          {activeView === 'overview' && (
-            <div style={{ flex: 1, overflowY: 'auto' }}>
-              <OverviewDashboard
-                currentRun={currentRun}
-                runs={runs}
-                onSelectRun={(id) => {
-                  setActiveRunId(id);
-                  setActiveView('studio');
-                }}
-                onNewResearch={() => {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                onOpenApproval={() => setIsApprovalModalOpen(true)}
-              />
-
-              {/* Objective Composer Embedded in Overview */}
-              <div style={{ borderTop: '1px solid var(--border-color)', marginTop: 'var(--space-2xl)' }}>
-                <ResearchObjectiveComposer onSubmit={handleStartNewResearch} isLoading={false} />
-              </div>
-            </div>
-          )}
-
-          {/* VIEW: RUNS */}
-          {activeView === 'runs' && (
-            <div style={{ flex: 1, overflowY: 'auto' }}>
-              <ResearchRunsList
-                runs={runs}
-                activeRunId={activeRunId}
-                onSelectRun={(id) => {
-                  setActiveRunId(id);
-                  setActiveView('studio');
-                }}
-                onViewReport={(id) => {
-                  setActiveRunId(id);
-                  setActiveView('reports');
-                }}
-              />
-            </div>
-          )}
-
-          {/* VIEW: SOURCES */}
-          {activeView === 'sources' && (
-            <div style={{ flex: 1, overflowY: 'auto' }}>
-              <SourcesExplorer sources={currentRun.sources} />
-            </div>
-          )}
-
-          {/* VIEW: REPORTS */}
-          {activeView === 'reports' && (
-            <div style={{ flex: 1, overflowY: 'auto' }}>
-              <ReportReader
-                reportMarkdown={
-                  currentRun.finalReport ||
-                  `# Preliminary Research Brief
+              {/* STAGE 05: RESEARCH REPORT */}
+              {activeView === 'reports' && (
+                <div style={{ flex: 1, overflowY: 'auto' }}>
+                  <ReportReader
+                    reportMarkdown={
+                      currentRun.finalReport ||
+                      `# Preliminary Research Brief
 The report for ${currentRun.runId} is currently being synthesized. Check the Research Studio stage pipeline for live execution status.`
-                }
-                topic={currentRun.researchTopic}
-                runId={currentRun.runId}
-                timestamp={currentRun.startTime}
-              />
-            </div>
-          )}
+                    }
+                    topic={currentRun.researchTopic}
+                    runId={currentRun.runId}
+                    timestamp={currentRun.startTime}
+                  />
+                </div>
+              )}
 
-          {/* VIEW: SETTINGS */}
-          {activeView === 'settings' && (
-            <div style={{ flex: 1, overflowY: 'auto' }}>
-              <SystemSettings />
-            </div>
-          )}
-        </main>
-      </div>
+              {/* VIEW: SETTINGS */}
+              {activeView === 'settings' && (
+                <div style={{ flex: 1, overflowY: 'auto' }}>
+                  <SystemSettings />
+                </div>
+              )}
+            </main>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Chat Assistant Drawer (Available anywhere when opened) */}
+      <ResearchChatbot
+        isOpen={isChatDrawerOpen}
+        onClose={() => setIsChatDrawerOpen(false)}
+        onProceedToPlan={handleProceedToPlan}
+        isFullView={false}
+      />
+
+      {/* Floating "ASK ACE" Launcher Button (matches reference) */}
+      {!isChatDrawerOpen && activeView !== 'chat' && (
+        <button
+          onClick={() => setIsChatDrawerOpen(true)}
+          className="chat-launch"
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '68px',
+            zIndex: 60,
+            background: 'var(--accent-lime, #c8f169)',
+            border: '1px solid var(--accent-lime, #c8f169)',
+            color: '#090a09',
+            padding: '13px 20px',
+            fontWeight: 700,
+            fontFamily: 'var(--font-mono, monospace)',
+            fontSize: '11px',
+            letterSpacing: '0.04em',
+            cursor: 'pointer',
+            boxShadow: '0 8px 35px rgba(0, 0, 0, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+          aria-label="Open ACE assistant"
+        >
+          <span>✳ ASK ACE</span>
+          <span>↗</span>
+        </button>
+      )}
 
       {/* Human Approval & Replanning Modal */}
       <ApprovalModal

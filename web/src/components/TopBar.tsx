@@ -1,6 +1,6 @@
-import React from 'react';
-import { Terminal, Activity, Sparkles, Sun, Moon, Cpu, Database } from 'lucide-react';
+import { Terminal, Activity, Sparkles, Sun, Moon, Cpu, Database, Compass, Layers, FileCheck } from 'lucide-react';
 import { WorkflowStatus } from '../types/research';
+import { ActiveView } from './NavigationSidebar';
 
 interface TopBarProps {
   runId: string;
@@ -12,6 +12,8 @@ interface TopBarProps {
   isTextmodeOpen: boolean;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
+  activeView?: ActiveView;
+  onNavigateView?: (view: ActiveView) => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -24,6 +26,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   isTextmodeOpen,
   theme,
   onToggleTheme,
+  activeView,
+  onNavigateView,
 }) => {
   const getStatusBadge = () => {
     if (isApprovalRequired) {
@@ -105,6 +109,52 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         <div>{getStatusBadge()}</div>
       </div>
+
+      {/* Middle Stage Navigation Shortcuts */}
+      {onNavigateView && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <button
+            onClick={() => onNavigateView('landing')}
+            className={`btn ${activeView === 'landing' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ padding: '3px 8px', fontSize: '10px' }}
+            title="Stage 01: Landing Page"
+          >
+            01 / LANDING
+          </button>
+          <button
+            onClick={() => onNavigateView('chat')}
+            className={`btn ${activeView === 'chat' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ padding: '3px 8px', fontSize: '10px' }}
+            title="Stage 02: AI Scoping Assistant"
+          >
+            02 / SCOPING
+          </button>
+          <button
+            onClick={() => onNavigateView('plan')}
+            className={`btn ${activeView === 'plan' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ padding: '3px 8px', fontSize: '10px' }}
+            title="Stage 03: Plan Review"
+          >
+            03 / PLAN
+          </button>
+          <button
+            onClick={() => onNavigateView('studio')}
+            className={`btn ${activeView === 'studio' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ padding: '3px 8px', fontSize: '10px' }}
+            title="Stage 04: Research Studio"
+          >
+            04 / STUDIO
+          </button>
+          <button
+            onClick={() => onNavigateView('reports')}
+            className={`btn ${activeView === 'reports' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ padding: '3px 8px', fontSize: '10px' }}
+            title="Stage 05: Final Report"
+          >
+            05 / REPORT
+          </button>
+        </div>
+      )}
 
       {/* Telemetry & Action Toggles */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>

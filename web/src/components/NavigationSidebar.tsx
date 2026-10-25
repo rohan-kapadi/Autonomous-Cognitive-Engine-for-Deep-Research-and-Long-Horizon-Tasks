@@ -9,9 +9,20 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  Terminal,
+  FileCheck,
 } from 'lucide-react';
 
-export type ActiveView = 'overview' | 'studio' | 'runs' | 'sources' | 'reports' | 'settings';
+export type ActiveView =
+  | 'landing'
+  | 'chat'
+  | 'plan'
+  | 'studio'
+  | 'overview'
+  | 'runs'
+  | 'sources'
+  | 'reports'
+  | 'settings';
 
 interface NavigationSidebarProps {
   activeView: ActiveView;
@@ -29,11 +40,13 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
   onNewResearch,
 }) => {
   const navItems = [
-    { id: 'studio' as ActiveView, label: 'Research Studio', icon: Layers, badge: 'ACTIVE' },
-    { id: 'overview' as ActiveView, label: 'Overview', icon: Compass },
-    { id: 'runs' as ActiveView, label: 'Research Runs', icon: History },
+    { id: 'landing' as ActiveView, label: '01 / Landing Page', icon: Compass },
+    { id: 'chat' as ActiveView, label: '02 / AI Assistant', icon: Terminal, badge: 'SCOPING' },
+    { id: 'plan' as ActiveView, label: '03 / Plan Review', icon: FileCheck },
+    { id: 'studio' as ActiveView, label: '04 / Research Studio', icon: Layers, badge: 'WORKSPACE' },
+    { id: 'reports' as ActiveView, label: '05 / Research Reports', icon: FileText },
     { id: 'sources' as ActiveView, label: 'Evidence & Sources', icon: Bookmark },
-    { id: 'reports' as ActiveView, label: 'Reports Archive', icon: FileText },
+    { id: 'runs' as ActiveView, label: 'Mission History', icon: History },
     { id: 'settings' as ActiveView, label: 'System & Engine', icon: Sliders },
   ];
 
