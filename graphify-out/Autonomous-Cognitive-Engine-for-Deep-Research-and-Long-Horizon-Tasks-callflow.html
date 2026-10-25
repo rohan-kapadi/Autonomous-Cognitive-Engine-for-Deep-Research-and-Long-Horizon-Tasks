@@ -1,0 +1,2959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks — Complete Call Flow &amp; Architecture Documentation</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --border: #334155;
+  --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8;
+  --warn: #fbbf24; --err: #f87171; --ok: #34d399;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+.container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+h1 { font-size: 2.4rem; margin-bottom: 8px; background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+h2 { font-size: 1.7rem; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--accent); }
+h3 { font-size: 1.25rem; margin: 32px 0 12px; color: var(--accent); }
+h4 { font-size: 1.05rem; margin: 20px 0 8px; color: var(--warn); }
+p { margin: 8px 0; color: var(--muted); }
+.subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 32px; }
+.mermaid { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; overflow-x: auto; position: relative; }
+.mermaid.is-enhanced { padding: 0; overflow: hidden; min-height: 260px; }
+.mermaid-viewport { padding: 54px 24px 24px; overflow: hidden; cursor: grab; touch-action: none; min-height: 260px; }
+.mermaid-viewport.is-dragging { cursor: grabbing; }
+.mermaid-viewport svg { max-width: none !important; height: auto; transform-origin: 0 0; transition: transform 120ms ease; }
+.mermaid-toolbar { position: absolute; top: 10px; right: 10px; z-index: 3; display: flex; align-items: center; gap: 6px; padding: 6px; background: rgba(15,23,42,0.92); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.28); }
+.mermaid-toolbar button, .mermaid-toolbar .zoom-level { height: 28px; min-width: 32px; border: 1px solid var(--border); border-radius: 6px; background: #1e293b; color: var(--text); font: 600 0.78rem system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center; }
+.mermaid-toolbar button { cursor: pointer; }
+.mermaid-toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+.mermaid-toolbar .zoom-level { min-width: 52px; color: var(--muted); background: transparent; }
+.call-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.92rem; }
+.call-table th { background: #1a2744; color: var(--accent); text-align: left; padding: 10px 14px; border: 1px solid var(--border); }
+.call-table td { padding: 8px 14px; border: 1px solid var(--border); vertical-align: top; }
+.call-table tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+.tag-async { background: #7c3aed33; color: #a78bfa; }
+.tag-class { background: #05966933; color: var(--ok); }
+.tag-func { background: #2563eb33; color: var(--accent); }
+.tag-cmd { background: #d9770633; color: var(--warn); }
+.tag-endpoint { background: #dc262633; color: var(--err); }
+.tag-hook { background: #db277733; color: #f472b6; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 16px 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+.arrow-chain { font-family: 'Fira Code', monospace; font-size: 0.85rem; color: var(--accent); padding: 10px; background: rgba(56,189,248,0.06); border-radius: 6px; }
+code { font-family: 'Fira Code', 'Cascadia Code', monospace; background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 3px; font-size: 0.88em; }
+ul, ol { margin: 8px 0 8px 24px; color: var(--muted); }
+li { margin: 4px 0; }
+a { color: var(--accent); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.nav { position: sticky; top: 0; background: var(--bg); z-index: 10; padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; gap: 20px; flex-wrap: wrap; font-size: 0.9rem; }
+.nav a { text-decoration: none; }
+.nav a:hover { text-decoration: underline; }
+@media (max-width: 768px) { .container { padding: 16px; } h1 { font-size: 1.8rem; } }
+
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks — Complete Call Flow &amp; Architecture Documentation</h1>
+<p class="subtitle">Generated from graphify knowledge graph: 535 nodes, 1138 edges, 28 communities. Commit: 18845ca</p>
+
+<div class="nav">
+    <a href="#overview">Architecture Overview</a>
+    <a href="#build-graph">Graph Build</a>
+    <a href="#analysis-clustering">Analysis &amp; Clustering</a>
+    <a href="#cli-skills">CLI &amp; Skill Installers</a>
+    <a href="#serve-api">Serving API</a>
+    <a href="#tests-fixtures">Tests &amp; Fixtures</a>
+    <a href="#console-notebook-formatting-utilities">Console &amp; Notebook Formatting Utilities</a>
+    <a href="#docker-compose-service-specifications">Docker Compose Service Specifications</a>
+    <a href="#temporal-worker-service-config">Temporal Worker Service Config</a>
+    <a href="#docker-infrastructure-volumes">Docker Infrastructure &amp; Volumes</a>
+    <a href="#container-environment-configuration">Container Environment Configuration</a>
+    <a href="#container-resource-allocations">Container Resource Allocations</a>
+    <a href="#temporal-server-service-config">Temporal Server Service Config</a>
+    <a href="#container-health-checks-liveness">Container Health Checks &amp; Liveness</a>
+    <a href="#durable-execution-concepts">Durable Execution Concepts</a>
+    <a href="#other">Other</a>
+</div>
+
+<!-- ====== Architecture Overview ====== -->
+<h2 id="overview">1. Architecture Overview</h2>
+
+<div class="mermaid">
+
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    BUILD_GRAPH_321CBB04("Graph Build<br/><small>28 nodes</small>")
+    class BUILD_GRAPH_321CBB04 module;
+    ANALYSIS_CLUSTERING_C79796DA("Analysis &amp; Clustering<br/><small>7 nodes</small>")
+    class ANALYSIS_CLUSTERING_C79796DA module;
+    CLI_SKILLS_9964CBB8("CLI &amp; Skill Installers<br/><small>225 nodes</small>")
+    class CLI_SKILLS_9964CBB8 module;
+    SERVE_API_35EC8E86("Serving API<br/><small>18 nodes</small>")
+    class SERVE_API_35EC8E86 module;
+    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>189 nodes</small>")
+    class TESTS_FIXTURES_B84B1DCC module;
+    CONSOLE_NOTEBOOK_FORMATTING_UTILITIES_9F850559("Console &amp; Notebook Formatting Utilities<br/><small>15 nodes</small>")
+    class CONSOLE_NOTEBOOK_FORMATTING_UTILITIES_9F850559 module;
+    DOCKER_COMPOSE_SERVICE_SPECIFICATIONS_1ED6601D("Docker Compose Service Specifications<br/><small>8 nodes</small>")
+    class DOCKER_COMPOSE_SERVICE_SPECIFICATIONS_1ED6601D module;
+    TEMPORAL_WORKER_SERVICE_CONFIG_4FFB6948("Temporal Worker Service Config<br/><small>8 nodes</small>")
+    class TEMPORAL_WORKER_SERVICE_CONFIG_4FFB6948 module;
+    DOCKER_INFRASTRUCTURE_VOLUMES_82C16EDE("Docker Infrastructure &amp; Volumes<br/><small>7 nodes</small>")
+    class DOCKER_INFRASTRUCTURE_VOLUMES_82C16EDE module;
+    CONTAINER_ENVIRONMENT_CONFIGURATION_556CAED4("Container Environment Configuration<br/><small>7 nodes</small>")
+    class CONTAINER_ENVIRONMENT_CONFIGURATION_556CAED4 module;
+    CONTAINER_RESOURCE_ALLOCATIONS_AD4BDDFE("Container Resource Allocations<br/><small>7 nodes</small>")
+    class CONTAINER_RESOURCE_ALLOCATIONS_AD4BDDFE module;
+    TEMPORAL_SERVER_SERVICE_CONFIG_22B6930E("Temporal Server Service Config<br/><small>7 nodes</small>")
+    class TEMPORAL_SERVER_SERVICE_CONFIG_22B6930E module;
+    CONTAINER_HEALTH_CHECKS_LIVENESS_E2142EE8("Container Health Checks &amp; Liveness<br/><small>6 nodes</small>")
+    class CONTAINER_HEALTH_CHECKS_LIVENESS_E2142EE8 module;
+    DURABLE_EXECUTION_CONCEPTS_83A36CA1("Durable Execution Concepts<br/><small>1 nodes</small>")
+    class DURABLE_EXECUTION_CONCEPTS_83A36CA1 module;
+    OTHER_D0941E68("Other<br/><small>2 nodes</small>")
+    class OTHER_D0941E68 module;
+    CLI_SKILLS_9964CBB8 -->|imports x45| TESTS_FIXTURES_B84B1DCC
+    TESTS_FIXTURES_B84B1DCC -->|imports x26| CLI_SKILLS_9964CBB8
+    SERVE_API_35EC8E86 -->|imports x12| CLI_SKILLS_9964CBB8
+    CLI_SKILLS_9964CBB8 -->|imports x8| SERVE_API_35EC8E86
+    CLI_SKILLS_9964CBB8 -->|imports x5| BUILD_GRAPH_321CBB04
+    BUILD_GRAPH_321CBB04 -->|imports x5| CLI_SKILLS_9964CBB8
+    CONSOLE_NOTEBOOK_FORMATTING_UTILITIES_9F850559 -->|imports x4| TESTS_FIXTURES_B84B1DCC
+    TESTS_FIXTURES_B84B1DCC -->|method x3| ANALYSIS_CLUSTERING_C79796DA
+    SERVE_API_35EC8E86 -->|uses x3| BUILD_GRAPH_321CBB04
+    SERVE_API_35EC8E86 -->|imports x2| TESTS_FIXTURES_B84B1DCC
+    BUILD_GRAPH_321CBB04 -->|imports| TESTS_FIXTURES_B84B1DCC
+    DOCKER_COMPOSE_SERVICE_SPECIFICATIONS_1ED6601D -->|contains| BUILD_GRAPH_321CBB04
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h4>Architecture Layers</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>Layer</th><th>Nodes</th><th>Communities</th></tr>
+      <tr><td>Graph Build</td><td>28</td><td><code>13, 14, 24</code></td></tr><tr><td>Analysis &amp; Clustering</td><td>7</td><td><code>22</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>225</td><td><code>1, 3, 4, 7, 9, 10, 12, 15</code></td></tr><tr><td>Serving API</td><td>18</td><td><code>8</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>189</td><td><code>0, 2, 5, 6</code></td></tr><tr><td>Console &amp; Notebook Formatting Utilities</td><td>15</td><td><code>11</code></td></tr><tr><td>Docker Compose Service Specifications</td><td>8</td><td><code>16</code></td></tr><tr><td>Temporal Worker Service Config</td><td>8</td><td><code>17</code></td></tr><tr><td>Docker Infrastructure &amp; Volumes</td><td>7</td><td><code>18</code></td></tr><tr><td>Container Environment Configuration</td><td>7</td><td><code>19</code></td></tr><tr><td>Container Resource Allocations</td><td>7</td><td><code>20</code></td></tr><tr><td>Temporal Server Service Config</td><td>7</td><td><code>21</code></td></tr><tr><td>Container Health Checks &amp; Liveness</td><td>6</td><td><code>23</code></td></tr><tr><td>Durable Execution Concepts</td><td>1</td><td><code>25</code></td></tr><tr><td>Other</td><td>2</td><td><code>26, 27</code></td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Core Flow</h4>
+    <div class="arrow-chain">Console &amp; Notebook Formatting Utilities -&gt; Tests &amp; Fixtures -&gt; CLI &amp; Skill Installers -&gt; Serving API -&gt; Graph Build -&gt; Analysis &amp; Clustering -&gt; Docker Compose Service Specifications</div>
+  </div>
+</div>
+<div class="grid">
+  <div class="card">
+    <h4>Graph Report Highlights</h4>
+    <ul>
+      <li>535 nodes · 1138 edges · 28 communities (24 shown, 4 thin omitted)</li>
+      <li>Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 128 edges (avg confidence: 0.92)</li>
+      <li>Token cost: 1,200 input · 800 output</li>
+      <li>1. `ACEResearchWorkflow` - 31 edges</li>
+      <li>2. `ResearchWorkflowInput` - 28 edges</li>
+      <li>3. `ACEWorkflowClient` - 19 edges</li>
+    </ul>
+  </div>
+</div>
+<hr>
+<!-- ====== 2. Graph Build ====== -->
+<h2 id="build-graph">2. Graph Build</h2>
+<p>Graph Build groups implementation around research, langgraphjson, state, deep, mostly in langgraph.json, src/deep_research_from_scratch/state_research.py, docker-compose.yml. This section covers 28 nodes and 29 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Graph Build (28 nodes, 29 edges)
+    subgraph build_graph_langgraph_json_5a24b1e1["langgraph.json"]
+        langgraph_graphs_deep_researcher_6aecbf96("deep_researcher<br/><small>langgraph.json</small>")
+        langgraph_dependencies_a7568d2e("dependencies<br/><small>langgraph.json</small>")
+        langgraph_dockerfile_lines_8b9e6617("dockerfile_lines<br/><small>langgraph.json</small>")
+        langgraph_env_f4b313c5("env<br/><small>langgraph.json</small>")
+        langgraph_graphs_c8d2f717("graphs<br/><small>langgraph.json</small>")
+        langgraph_a6408f27("langgraph.json")
+        langgraph_graphs_learning_agent_4eb59496("learning_agent<br/><small>langgraph.json</small>")
+        langgraph_python_version_346c3614("python_version<br/><small>langgraph.json</small>")
+        langgraph_graphs_research_agent_58ac73d0("research_agent<br/><small>langgraph.json</small>")
+        langgraph_graphs_research_agent_full_5089623d("research_agent_full<br/><small>langgraph.json</small>")
+    end
+    subgraph build_graph_docker_compose_yml_3a484270["docker-compose.yml"]
+        docker_compose_deep_research_build_c478bf36("build<br/><small>docker-compose.yml</small>")
+        docker_compose_jupyter_build_2b4a5148("build<br/><small>docker-compose.yml</small>")
+        docker_compose_temporal_worker_build_887f35da("build<br/><small>docker-compose.yml</small>")
+        docker_compose_build_context_cb8568c7("context<br/><small>docker-compose.yml</small>")
+        docker_compose_build_dockerfile_fde4a0a2("dockerfile<br/><small>docker-compose.yml</small>")
+    end
+    subgraph build_graph_External_generated_653891f5["External / generated"]
+        operator_fe96dd39("operator")
+        src_deep_research_from_scratch_state_research_py_5a855e67("BaseModel")
+    end
+    src_deep_research_from_scratch_state_research_87723aba("state_research.py")
+    src_deep_research_from_scratch_state_research_87723aba -->|imports| operator_fe96dd39
+    %% Omitted for readability: 10 nodes, 0 edges
+    class langgraph_graphs_deep_researcher_6aecbf96 function;
+    class langgraph_dependencies_a7568d2e function;
+    class langgraph_dockerfile_lines_8b9e6617 function;
+    class langgraph_env_f4b313c5 function;
+    class langgraph_graphs_c8d2f717 function;
+    class langgraph_a6408f27 function;
+    class langgraph_graphs_learning_agent_4eb59496 function;
+    class langgraph_python_version_346c3614 function;
+    class langgraph_graphs_research_agent_58ac73d0 function;
+    class langgraph_graphs_research_agent_full_5089623d function;
+    class docker_compose_deep_research_build_c478bf36 function;
+    class docker_compose_jupyter_build_2b4a5148 function;
+    class docker_compose_temporal_worker_build_887f35da function;
+    class docker_compose_build_context_cb8568c7 function;
+    class docker_compose_build_dockerfile_fde4a0a2 function;
+    class operator_fe96dd39 function;
+    class src_deep_research_from_scratch_state_research_py_5a855e67 klass;
+    class src_deep_research_from_scratch_state_research_87723aba module;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>langgraph.json</code><br><small style="color:var(--muted)">langgraph.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Builds dependency relationships and graph data.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>dependencies</code><br><small style="color:var(--muted)">langgraph.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>dependencies node in langgraph.json.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>dockerfile_lines</code><br><small style="color:var(--muted)">langgraph.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>dockerfile_lines node in langgraph.json.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>env</code><br><small style="color:var(--muted)">langgraph.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>env node in langgraph.json.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>graphs</code><br><small style="color:var(--muted)">langgraph.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Builds dependency relationships and graph data.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>deep_researcher</code><br><small style="color:var(--muted)">langgraph.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>deep_researcher node in langgraph.json.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>learning_agent</code><br><small style="color:var(--muted)">langgraph.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>learning_agent node in langgraph.json.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>research_agent</code><br><small style="color:var(--muted)">langgraph.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>research_agent node in langgraph.json.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>research_agent_full</code><br><small style="color:var(--muted)">langgraph.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>research_agent_full node in langgraph.json.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>research_agent_mcp</code><br><small style="color:var(--muted)">langgraph.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>research_agent_mcp node in langgraph.json.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>research_agent_supervisor</code><br><small style="color:var(--muted)">langgraph.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>research_agent_supervisor node in langgraph.json.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>scope_research</code><br><small style="color:var(--muted)">langgraph.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>scope_research node in langgraph.json.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>python_version</code><br><small style="color:var(--muted)">langgraph.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>python_version node in langgraph.json.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>ClarifyWithUser</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_research.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>ClarifyWithUser node in src/deep_research_from_scratch/state_research.py.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>ResearchQuestion</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_research.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>ResearchQuestion node in src/deep_research_from_scratch/state_research.py.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>Summary</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_research.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>summarize_webpage_content()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small><br><code>utils.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>Summary node in src/deep_research_from_scratch/state_research.py.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>state_research.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_research.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>research_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent.py</small><br><code>research_agent_mcp.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_mcp.py</small><br><code>utils.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><code>langchain_core_messages</code><br><code>langgraph_graph_message</code><br><code>operator</code><br>+2 more</td>
+  <td>Module file in src/deep_research_from_scratch/state_research.py.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>BaseModel</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>BaseModel node in project.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>State Definitions and Pydantic Schemas for Research Agent This module defines…</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_research.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for State Definitions and Pydantic Schemas for Research Agent This module defines….</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>Schema for user clarification decisions during scoping phase.</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_research.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Schema for user clarification decisions during scoping phase..</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>Schema for research brief generation.</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_research.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Schema for research brief generation..</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>Schema for webpage content summarization.</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_research.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Schema for webpage content summarization..</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>operator</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>autonomous_learning_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/autonomous_learning_agent.py</small><br><code>state_multi_agent_supervisor.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_multi_agent_supervisor.py</small><br><code>state_research.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_research.py</small><br>+1 more</td>
+  <td>No direct outbound edge</td>
+  <td>operator node in project.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>context</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>context node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>dockerfile</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>dockerfile node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>build</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>build node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>build</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>build node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>build</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>build node in docker-compose.yml.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>langgraph.json</code></td><td>13 nodes</td></tr>
+<tr><td><code>src/deep_research_from_scratch/state_research.py</code></td><td>8 nodes</td></tr>
+<tr><td><code>docker-compose.yml</code></td><td>5 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x21, explains x4, inherits x3, imports x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 3. Analysis & Clustering ====== -->
+<h2 id="analysis-clustering">3. Analysis &amp; Clustering</h2>
+<p>Analysis &amp; Clustering groups implementation around temporal, integration, workflowspy, query, mostly in temporal_integration/workflows.py. This section covers 7 nodes and 6 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Analysis &amp; Clustering (7 nodes, 6 edges)
+    subgraph analysis_clustering_temporal_integration_workflo_7a31278a["temporal_integration/workflows.py"]
+        temporal_integration_workflows_rationale_189_26bb4e51("Query the latest ACE cognitive state sn...<br/><small>temporal_integration/workflows.py</small>")
+        temporal_integration_workflows_rationale_202_eb7aa71a("Query current workflow status ('pending...<br/><small>temporal_integration/workflows.py</small>")
+        temporal_integration_workflows_rationale_207_737653e2("Query whether the workflow is currently...<br/><small>temporal_integration/workflows.py</small>")
+        temporal_integration_workflows_aceresearchworkfl_3044ed54("get_cognitive_state()<br/><small>temporal_integration/workflows.py</small>")
+        temporal_integration_workflows_aceresearchworkfl_66b8ef6d("get_status()<br/><small>temporal_integration/workflows.py</small>")
+        temporal_integration_workflows_aceresearchworkfl_1424dd79("is_waiting_for_approval()<br/><small>temporal_integration/workflows.py</small>")
+    end
+    query_7cd9148e("query")
+    temporal_integration_workflows_aceresearchworkfl_3044ed54 -->|references| query_7cd9148e
+    temporal_integration_workflows_aceresearchworkfl_66b8ef6d -->|references| query_7cd9148e
+    temporal_integration_workflows_aceresearchworkfl_1424dd79 -->|references| query_7cd9148e
+    temporal_integration_workflows_rationale_189_26bb4e51 -->|explains| temporal_integration_workflows_aceresearchworkfl_3044ed54
+    temporal_integration_workflows_rationale_202_eb7aa71a -->|explains| temporal_integration_workflows_aceresearchworkfl_66b8ef6d
+    temporal_integration_workflows_rationale_207_737653e2 -->|explains| temporal_integration_workflows_aceresearchworkfl_1424dd79
+    class temporal_integration_workflows_rationale_189_26bb4e51 concept;
+    class temporal_integration_workflows_rationale_202_eb7aa71a concept;
+    class temporal_integration_workflows_rationale_207_737653e2 concept;
+    class temporal_integration_workflows_aceresearchworkfl_3044ed54 function;
+    class temporal_integration_workflows_aceresearchworkfl_66b8ef6d function;
+    class temporal_integration_workflows_aceresearchworkfl_1424dd79 function;
+    class query_7cd9148e function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>.get_cognitive_state()</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>.get_cognitive_state() node in temporal_integration/workflows.py.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>.get_status()</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>.get_status() node in temporal_integration/workflows.py.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>.is_waiting_for_approval()</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>.is_waiting_for_approval() node in temporal_integration/workflows.py.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>query</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>query node in project.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>Query the latest ACE cognitive state snapshot.</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Query the latest ACE cognitive state snapshot..</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>Query current workflow status (&#x27;pending&#x27;, &#x27;scoping&#x27;, &#x27;paused&#x27;, &#x27;researching&#x27;,…</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Query current workflow status (&#x27;pending&#x27;, &#x27;scoping&#x27;, &#x27;paused&#x27;, &#x27;researching&#x27;,….</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>Query whether the workflow is currently paused awaiting human input.</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Query whether the workflow is currently paused awaiting human input..</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>temporal_integration/workflows.py</code></td><td>6 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: references x3, explains x3. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 4. CLI & Skill Installers ====== -->
+<h2 id="cli-skills">4. CLI &amp; Skill Installers</h2>
+<p>CLI &amp; Skill Installers groups implementation around research, deep, scratch, agentpy, mostly in src/deep_research_from_scratch/autonomous_learning_agent.py, src/deep_research_from_scratch/learning_agent.py, src/deep_research_from_scratch/research_agent_mcp.py. This section covers 225 nodes and 435 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: CLI &amp; Skill Installers (225 nodes, 435 edges)
+    subgraph cli_skills_src_deep_research_from_scratch_resear_9d42a075["src/deep_research_from_scratch/research_agent_scope.py"]
+        src_deep_research_from_scratch_research_agent_sc_161075b6("clarify_with_user()<br/><small>src/deep_research_from_scratch/research_agent_scope.py</small>")
+        src_deep_research_from_scratch_research_agent_sc_820685cd("get_today_str()<br/><small>src/deep_research_from_scratch/research_agent_scope.py</small>")
+        src_deep_research_from_scratch_research_agent_sc_ccb69f2b("write_research_brief()<br/><small>src/deep_research_from_scratch/research_agent_scope.py</small>")
+    end
+    subgraph cli_skills_src_deep_research_from_scratch_deep_r_a6f80401["src/deep_research_from_scratch/deep_research_agent.py"]
+        src_deep_research_from_scratch_deep_research_age_ea161f33("deep_research_agent.py")
+        src_deep_research_from_scratch_deep_research_age_368d2f74("final_report_generation()<br/><small>src/deep_research_from_scratch/deep_research_agent.py</small>")
+    end
+    subgraph cli_skills_src_deep_research_from_scratch_resear_efaaf0ea["src/deep_research_from_scratch/research_agent_full.py"]
+        src_deep_research_from_scratch_research_agent_fu_9e500e71("final_report_generation()<br/><small>src/deep_research_from_scratch/research_agent_full.py</small>")
+        src_deep_research_from_scratch_research_agent_fu_5cf4c54b("save_report_to_file()<br/><small>src/deep_research_from_scratch/research_agent_full.py</small>")
+    end
+    subgraph cli_skills_temporal_integration_adapters_py_5def96fc["temporal_integration/adapters.py"]
+        temporal_integration_adapters_get_langgraph_plug_e4cf0845("langgraph plugin instance()<br/><small>temporal_integration/adapters.py</small>")
+        temporal_integration_adapters_build_temporal_ann_d7e6dc39("annotated ace graph()<br/><small>temporal_integration/adapters.py</small>")
+    end
+    uuid_48e3462c("uuid")
+    src_deep_research_from_scratch_autonomous_learni_288e8c1d("autonomous_learning_agent.py")
+    src_deep_research_from_scratch_learning_agent_cc626ccb("learning_agent.py")
+    src_deep_research_from_scratch_multi_agent_super_3dd8f3aa("multi_agent_supervisor.py")
+    src_deep_research_from_scratch_research_agent_6cc86efa("research_agent.py")
+    src_deep_research_from_scratch_research_agent_mc_e0fe73e5("research_agent_mcp.py")
+    src_deep_research_from_scratch_retry_utils_ainvo_0632f9f7("ainvoke_with_retry()<br/><small>src/deep_research_from_scratch/retry_utils.py</small>")
+    src_deep_research_from_scratch_utils_get_today_s_e2dcde3e("get_today_str()<br/><small>src/deep_research_from_scratch/utils.py</small>")
+    tests_test_existing_behavior_test_populate_cogni_518d5a2b("populate cognitive state()<br/><small>tests/test_existing_behavior.py</small>")
+    src_deep_research_from_scratch_deep_research_age_368d2f74 -->|calls| src_deep_research_from_scratch_utils_get_today_s_e2dcde3e
+    src_deep_research_from_scratch_research_agent_fu_9e500e71 -->|calls| src_deep_research_from_scratch_utils_get_today_s_e2dcde3e
+    src_deep_research_from_scratch_research_agent_fu_5cf4c54b -->|calls| uuid_48e3462c
+    src_deep_research_from_scratch_research_agent_sc_161075b6 -->|calls| src_deep_research_from_scratch_retry_utils_ainvo_0632f9f7
+    src_deep_research_from_scratch_research_agent_sc_161075b6 -->|calls| src_deep_research_from_scratch_research_agent_sc_820685cd
+    src_deep_research_from_scratch_research_agent_sc_ccb69f2b -->|calls| src_deep_research_from_scratch_retry_utils_ainvo_0632f9f7
+    src_deep_research_from_scratch_research_agent_sc_ccb69f2b -->|calls| src_deep_research_from_scratch_research_agent_sc_820685cd
+    temporal_integration_adapters_get_langgraph_plug_e4cf0845 -->|calls| temporal_integration_adapters_build_temporal_ann_d7e6dc39
+    src_deep_research_from_scratch_deep_research_age_ea161f33 -->|imports| uuid_48e3462c
+    src_deep_research_from_scratch_deep_research_age_ea161f33 -->|imports| src_deep_research_from_scratch_utils_get_today_s_e2dcde3e
+    src_deep_research_from_scratch_deep_research_age_ea161f33 -->|imports| src_deep_research_from_scratch_research_agent_sc_161075b6
+    src_deep_research_from_scratch_deep_research_age_ea161f33 -->|imports| src_deep_research_from_scratch_research_agent_sc_ccb69f2b
+    src_deep_research_from_scratch_deep_research_age_ea161f33 -->|imports| src_deep_research_from_scratch_multi_agent_super_3dd8f3aa
+    src_deep_research_from_scratch_multi_agent_super_3dd8f3aa -->|imports| src_deep_research_from_scratch_utils_get_today_s_e2dcde3e
+    src_deep_research_from_scratch_multi_agent_super_3dd8f3aa -->|imports| src_deep_research_from_scratch_retry_utils_ainvo_0632f9f7
+    src_deep_research_from_scratch_multi_agent_super_3dd8f3aa -->|imports| src_deep_research_from_scratch_research_agent_6cc86efa
+    src_deep_research_from_scratch_research_agent_6cc86efa -->|imports| src_deep_research_from_scratch_utils_get_today_s_e2dcde3e
+    src_deep_research_from_scratch_autonomous_learni_288e8c1d -->|imports| src_deep_research_from_scratch_utils_get_today_s_e2dcde3e
+    src_deep_research_from_scratch_autonomous_learni_288e8c1d -->|imports| src_deep_research_from_scratch_research_agent_sc_161075b6
+    src_deep_research_from_scratch_autonomous_learni_288e8c1d -->|imports| src_deep_research_from_scratch_research_agent_sc_ccb69f2b
+    src_deep_research_from_scratch_autonomous_learni_288e8c1d -->|imports| uuid_48e3462c
+    src_deep_research_from_scratch_autonomous_learni_288e8c1d -->|imports| src_deep_research_from_scratch_multi_agent_super_3dd8f3aa
+    src_deep_research_from_scratch_learning_agent_cc626ccb -->|imports| uuid_48e3462c
+    src_deep_research_from_scratch_research_agent_mc_e0fe73e5 -->|imports| src_deep_research_from_scratch_utils_get_today_s_e2dcde3e
+    %% Omitted for readability: 207 nodes, 0 edges
+    class src_deep_research_from_scratch_research_agent_sc_161075b6 function;
+    class src_deep_research_from_scratch_research_agent_sc_820685cd function;
+    class src_deep_research_from_scratch_research_agent_sc_ccb69f2b function;
+    class src_deep_research_from_scratch_deep_research_age_ea161f33 module;
+    class src_deep_research_from_scratch_deep_research_age_368d2f74 function;
+    class src_deep_research_from_scratch_research_agent_fu_9e500e71 function;
+    class src_deep_research_from_scratch_research_agent_fu_5cf4c54b function;
+    class temporal_integration_adapters_get_langgraph_plug_e4cf0845 function;
+    class temporal_integration_adapters_build_temporal_ann_d7e6dc39 function;
+    class uuid_48e3462c function;
+    class src_deep_research_from_scratch_autonomous_learni_288e8c1d module;
+    class src_deep_research_from_scratch_learning_agent_cc626ccb module;
+    class src_deep_research_from_scratch_multi_agent_super_3dd8f3aa module;
+    class src_deep_research_from_scratch_research_agent_6cc86efa module;
+    class src_deep_research_from_scratch_research_agent_mc_e0fe73e5 module;
+    class src_deep_research_from_scratch_retry_utils_ainvo_0632f9f7 function;
+    class src_deep_research_from_scratch_utils_get_today_s_e2dcde3e function;
+    class tests_test_existing_behavior_test_populate_cogni_518d5a2b test;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>AgentInputState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>annotated ace graph()</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small><br><code>autonomous_learning_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/autonomous_learning_agent.py</small><br><code>deep_research_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/deep_research_agent.py</small><br>+2 more</td>
+  <td>No direct outbound edge</td>
+  <td>AgentInputState node in src/deep_research_from_scratch/state_scope.py.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>AgentState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>annotated ace graph()</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small><br><code>autonomous_learning_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/autonomous_learning_agent.py</small><br><code>checkpoint_and_resume()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_full.py</small><br>+12 more</td>
+  <td>No direct outbound edge</td>
+  <td>AgentState node in src/deep_research_from_scratch/state_scope.py.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>ClarifyWithUser</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>clarify_with_user()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/learning_agent.py</small><br><code>clarify_with_user()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_scope.py</small><br><code>learning_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/learning_agent.py</small><br>+1 more</td>
+  <td>No direct outbound edge</td>
+  <td>ClarifyWithUser node in src/deep_research_from_scratch/state_scope.py.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>ResearchQuestion</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>learning_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/learning_agent.py</small><br><code>research_agent_scope.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_scope.py</small><br><code>write_research_brief()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/learning_agent.py</small><br>+1 more</td>
+  <td>No direct outbound edge</td>
+  <td>ResearchQuestion node in src/deep_research_from_scratch/state_scope.py.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>final_report_generation()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/deep_research_agent.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>AgentState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small><br><code>get_today_str()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td>final_report_generation() node in src/deep_research_from_scratch/deep_research_agent.py.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>checkpoint_and_resume()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_full.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>annotated ace graph()</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small></td>
+  <td><code>AgentState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small></td>
+  <td>checkpoint_and_resume() node in src/deep_research_from_scratch/research_agent_full.py.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>final_report_generation()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_full.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>annotated ace graph()</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small></td>
+  <td><code>AgentState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small><br><code>extract_text_content()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/gemma_model.py</small><br><code>get_today_str()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td>final_report_generation() node in src/deep_research_from_scratch/research_agent_full.py.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>populate_cognitive_state()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_full.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>annotated ace graph()</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small><br><code>populate cognitive state()</code><br><small style="color:var(--muted)">tests/test_existing_behavior.py</small></td>
+  <td><code>AgentState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small></td>
+  <td>populate_cognitive_state() node in src/deep_research_from_scratch/research_agent_full.py.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>save_report_to_file()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_full.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>annotated ace graph()</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small></td>
+  <td><code>AgentState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small><br><code>uuid</code><br><code>write_file()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_full.py</small></td>
+  <td>save_report_to_file() node in src/deep_research_from_scratch/research_agent_full.py.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>write_file()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_full.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>save_report_to_file()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_full.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>write_file() node in src/deep_research_from_scratch/research_agent_full.py.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>clarify_with_user()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_scope.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>annotated ace graph()</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small><br><code>autonomous_learning_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/autonomous_learning_agent.py</small><br><code>deep_research_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/deep_research_agent.py</small><br>+1 more</td>
+  <td><code>AgentState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small><br><code>ainvoke_with_retry()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/retry_utils.py</small><br><code>ClarifyWithUser</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small><br>+1 more</td>
+  <td>clarify_with_user() node in src/deep_research_from_scratch/research_agent_scope.py.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>get_today_str()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_scope.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>clarify_with_user()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_scope.py</small><br><code>write_research_brief()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_scope.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>get_today_str() node in src/deep_research_from_scratch/research_agent_scope.py.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>write_research_brief()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_scope.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>annotated ace graph()</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small><br><code>autonomous_learning_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/autonomous_learning_agent.py</small><br><code>deep_research_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/deep_research_agent.py</small><br>+1 more</td>
+  <td><code>AgentState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small><br><code>ainvoke_with_retry()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/retry_utils.py</small><br><code>get_today_str()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_scope.py</small><br>+1 more</td>
+  <td>write_research_brief() node in src/deep_research_from_scratch/research_agent_scope.py.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>ainvoke_with_retry()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/retry_utils.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>clarify_with_user()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_scope.py</small><br><code>multi_agent_supervisor.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/multi_agent_supervisor.py</small><br><code>research_agent_scope.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_scope.py</small><br>+2 more</td>
+  <td>No direct outbound edge</td>
+  <td>ainvoke_with_retry() node in src/deep_research_from_scratch/retry_utils.py.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>build_temporal_annotated_ace_graph()</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">temporal_integration/__init__.py</small><br><code>graph and plugin()</code><br><small style="color:var(--muted)">tests/test_existing_behavior.py</small><br><code>langgraph plugin instance()</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small><br>+1 more</td>
+  <td><code>AgentInputState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small><br><code>AgentState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small><br><code>checkpoint_and_resume()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_full.py</small><br>+6 more</td>
+  <td>Builds dependency relationships and graph data.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>get_langgraph_plugin_instance()</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">temporal_integration/__init__.py</small><br><code>graph and plugin()</code><br><small style="color:var(--muted)">tests/test_existing_behavior.py</small><br><code>test_existing_behavior.py</code><br><small style="color:var(--muted)">tests/test_existing_behavior.py</small></td>
+  <td><code>annotated ace graph()</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small></td>
+  <td>Builds dependency relationships and graph data.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>supervisor_subgraph_node()</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>annotated ace graph()</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small></td>
+  <td><code>AgentState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small></td>
+  <td>Builds dependency relationships and graph data.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>test_graph_structure_and_nodes()</code><br><small style="color:var(--muted)">tests/test_existing_behavior.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Builds dependency relationships and graph data.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>test_populate_cognitive_state()</code><br><small style="color:var(--muted)">tests/test_existing_behavior.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>populate_cognitive_state()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_full.py</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>test_temporal_annotated_ace_graph_and_plugin()</code><br><small style="color:var(--muted)">tests/test_existing_behavior.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>annotated ace graph()</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small><br><code>langgraph plugin instance()</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small></td>
+  <td>Builds dependency relationships and graph data.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>demo_ace_langsmith.py</code><br><small style="color:var(--muted)">demo_ace_langsmith.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>asyncio</code><br><code>dotenv</code><br><code>gemma_model.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/gemma_model.py</small><br>+6 more</td>
+  <td>Module file in demo_ace_langsmith.py.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>MessagesState</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>MessagesState node in project.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>deep_research_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/deep_research_agent.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>AgentInputState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small><br><code>AgentState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small><br><code>clarify_with_user()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_scope.py</small><br>+12 more</td>
+  <td>Module file in src/deep_research_from_scratch/deep_research_agent.py.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>multi_agent_supervisor.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/multi_agent_supervisor.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>adapters.py</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small><br><code>autonomous_learning_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/autonomous_learning_agent.py</small><br><code>deep_research_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/deep_research_agent.py</small><br>+1 more</td>
+  <td><code>ainvoke_with_retry()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/retry_utils.py</small><br><code>asyncio</code><br><code>ConductResearch</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_multi_agent_supervisor.py</small><br>+18 more</td>
+  <td>Module file in src/deep_research_from_scratch/multi_agent_supervisor.py.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>prompts.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/prompts.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>autonomous_learning_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/autonomous_learning_agent.py</small><br><code>deep_research_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/deep_research_agent.py</small><br><code>learning_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/learning_agent.py</small><br>+6 more</td>
+  <td>No direct outbound edge</td>
+  <td>Module file in src/deep_research_from_scratch/prompts.py.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>research_agent_full.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_full.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>activities.py</code><br><small style="color:var(--muted)">temporal_integration/activities.py</small><br><code>adapters.py</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small><br><code>demo_ace_langsmith.py</code><br><small style="color:var(--muted)">demo_ace_langsmith.py</small><br>+3 more</td>
+  <td><code>AgentInputState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small><br><code>AgentState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small><br><code>clarify_with_user()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_scope.py</small><br>+18 more</td>
+  <td>Module file in src/deep_research_from_scratch/research_agent_full.py.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>research_agent_scope.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent_scope.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>adapters.py</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small><br><code>autonomous_learning_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/autonomous_learning_agent.py</small><br><code>deep_research_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/deep_research_agent.py</small><br>+1 more</td>
+  <td><code>AgentInputState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small><br><code>AgentState</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small><br><code>ainvoke_with_retry()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/retry_utils.py</small><br>+12 more</td>
+  <td>Module file in src/deep_research_from_scratch/research_agent_scope.py.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>Command</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-cmd">Entry</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Command node in project.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>state_scope.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_scope.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>activities.py</code><br><small style="color:var(--muted)">temporal_integration/activities.py</small><br><code>adapters.py</code><br><small style="color:var(--muted)">temporal_integration/adapters.py</small><br><code>autonomous_learning_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/autonomous_learning_agent.py</small><br>+7 more</td>
+  <td><code>langchain_core_messages</code><br><code>langgraph_graph</code><br><code>langgraph_graph_message</code><br>+3 more</td>
+  <td>Module file in src/deep_research_from_scratch/state_scope.py.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>BaseModel</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>BaseModel node in project.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>src/deep_research_from_scratch/autonomous_learning_agent.py</code></td><td>32 nodes</td></tr>
+<tr><td><code>src/deep_research_from_scratch/learning_agent.py</code></td><td>30 nodes</td></tr>
+<tr><td><code>src/deep_research_from_scratch/research_agent_mcp.py</code></td><td>13 nodes</td></tr>
+<tr><td><code>src/deep_research_from_scratch/research_agent.py</code></td><td>11 nodes</td></tr>
+<tr><td><code>src/deep_research_from_scratch/research_agent_full.py</code></td><td>11 nodes</td></tr>
+<tr><td><code>src/deep_research_from_scratch/state_scope.py</code></td><td>10 nodes</td></tr>
+<tr><td><code>src/deep_research_from_scratch/multi_agent_supervisor.py</code></td><td>9 nodes</td></tr>
+<tr><td><code>src/deep_research_from_scratch/research_agent_scope.py</code></td><td>8 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: imports x89, explains x78, contains x76, imports x50. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 5. Serving API ====== -->
+<h2 id="serve-api">5. Serving API</h2>
+<p>Serving API groups implementation around research, deep, scratch, utilspy, mostly in src/deep_research_from_scratch/utils.py. This section covers 18 nodes and 22 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Serving API (18 nodes, 22 edges)
+    subgraph serve_api_src_deep_research_from_scratch_utils_p_7b1e9bcd["src/deep_research_from_scratch/utils.py"]
+        src_deep_research_from_scratch_utils_tavily_sear_ac73cf05("tavily_search()<br/><small>src/deep_research_from_scratch/utils.py</small>")
+        src_deep_research_from_scratch_utils_cc89c390("utils.py")
+        src_deep_research_from_scratch_utils_process_sea_74726f49("process_search_results()<br/><small>src/deep_research_from_scratch/utils.py</small>")
+        src_deep_research_from_scratch_utils_summarize_w_a6ae95a6("summarize_webpage_content()<br/><small>src/deep_research_from_scratch/utils.py</small>")
+        src_deep_research_from_scratch_utils_tavily_sear_c25ebfed("tavily_search_multiple()<br/><small>src/deep_research_from_scratch/utils.py</small>")
+        src_deep_research_from_scratch_utils_deduplicate_6ba0321f("deduplicate_search_results()<br/><small>src/deep_research_from_scratch/utils.py</small>")
+        src_deep_research_from_scratch_utils_format_sear_05e32bd8("format_search_output()<br/><small>src/deep_research_from_scratch/utils.py</small>")
+        src_deep_research_from_scratch_utils_rationale_1_b1416862("Deduplicate search results by URL to av...<br/><small>src/deep_research_from_scratch/utils.py</small>")
+        src_deep_research_from_scratch_utils_rationale_1_e6f94587("Fetch results from Tavily search API wi...<br/><small>src/deep_research_from_scratch/utils.py</small>")
+        src_deep_research_from_scratch_utils_rationale_1_ffa77d9c("Format search results into a well-struc...<br/><small>src/deep_research_from_scratch/utils.py</small>")
+        src_deep_research_from_scratch_utils_rationale_5_64de9edd("Perform search using Tavily API for mul...<br/><small>src/deep_research_from_scratch/utils.py</small>")
+        src_deep_research_from_scratch_utils_rationale_1_5d226271("Process search results by summarizing c...<br/><small>src/deep_research_from_scratch/utils.py</small>")
+        src_deep_research_from_scratch_utils_rationale_2_479cdfd6("Research Utilities and Tools. This modu...<br/><small>src/deep_research_from_scratch/utils.py</small>")
+        src_deep_research_from_scratch_utils_rationale_8_b4a96f94("Summarize webpage content using the con...<br/><small>src/deep_research_from_scratch/utils.py</small>")
+    end
+    subgraph serve_api_External_generated_a71e9f44["External / generated"]
+        langchain_core_runnables_4a229edb("langchain_core_runnables")
+        tavily_b2a72334("tavily")
+        pathlib_4471f74a("pathlib")
+        injectedtoolarg_6f612c01("InjectedToolArg")
+    end
+    src_deep_research_from_scratch_utils_process_sea_74726f49 -->|calls| src_deep_research_from_scratch_utils_summarize_w_a6ae95a6
+    src_deep_research_from_scratch_utils_tavily_sear_ac73cf05 -->|calls| src_deep_research_from_scratch_utils_tavily_sear_c25ebfed
+    src_deep_research_from_scratch_utils_tavily_sear_ac73cf05 -->|calls| src_deep_research_from_scratch_utils_deduplicate_6ba0321f
+    src_deep_research_from_scratch_utils_tavily_sear_ac73cf05 -->|calls| src_deep_research_from_scratch_utils_process_sea_74726f49
+    src_deep_research_from_scratch_utils_tavily_sear_ac73cf05 -->|calls| src_deep_research_from_scratch_utils_format_sear_05e32bd8
+    src_deep_research_from_scratch_utils_cc89c390 -->|imports| langchain_core_runnables_4a229edb
+    src_deep_research_from_scratch_utils_cc89c390 -->|imports| tavily_b2a72334
+    src_deep_research_from_scratch_utils_cc89c390 -->|imports| pathlib_4471f74a
+    class src_deep_research_from_scratch_utils_tavily_sear_ac73cf05 function;
+    class src_deep_research_from_scratch_utils_cc89c390 module;
+    class src_deep_research_from_scratch_utils_process_sea_74726f49 function;
+    class src_deep_research_from_scratch_utils_summarize_w_a6ae95a6 function;
+    class src_deep_research_from_scratch_utils_tavily_sear_c25ebfed function;
+    class src_deep_research_from_scratch_utils_deduplicate_6ba0321f function;
+    class src_deep_research_from_scratch_utils_format_sear_05e32bd8 function;
+    class src_deep_research_from_scratch_utils_rationale_1_b1416862 concept;
+    class src_deep_research_from_scratch_utils_rationale_1_e6f94587 concept;
+    class src_deep_research_from_scratch_utils_rationale_1_ffa77d9c concept;
+    class src_deep_research_from_scratch_utils_rationale_5_64de9edd concept;
+    class src_deep_research_from_scratch_utils_rationale_1_5d226271 concept;
+    class src_deep_research_from_scratch_utils_rationale_2_479cdfd6 concept;
+    class src_deep_research_from_scratch_utils_rationale_8_b4a96f94 concept;
+    class langchain_core_runnables_4a229edb function;
+    class tavily_b2a72334 function;
+    class pathlib_4471f74a function;
+    class injectedtoolarg_6f612c01 klass;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>deduplicate_search_results()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>tavily_search()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>deduplicate_search_results() node in src/deep_research_from_scratch/utils.py.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>format_search_output()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>tavily_search()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>format_search_output() node in src/deep_research_from_scratch/utils.py.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>process_search_results()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>tavily_search()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><code>summarize_webpage_content()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td>process_search_results() node in src/deep_research_from_scratch/utils.py.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>summarize_webpage_content()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>process_search_results()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><code>get_today_str()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small><br><code>Summary</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/state_research.py</small></td>
+  <td>Organizes documentation pages, navigation, or content lookup.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>tavily_search()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>research_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/research_agent.py</small></td>
+  <td><code>deduplicate_search_results()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small><br><code>format_search_output()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small><br><code>process_search_results()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small><br>+1 more</td>
+  <td>tavily_search() node in src/deep_research_from_scratch/utils.py.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>tavily_search_multiple()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>tavily_search()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>tavily_search_multiple() node in src/deep_research_from_scratch/utils.py.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>InjectedToolArg</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>InjectedToolArg node in project.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>deep_research_from_scratch/utils.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>autonomous_learning_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/autonomous_learning_agent.py</small><br><code>deep_research_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/deep_research_agent.py</small><br><code>multi_agent_supervisor.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/multi_agent_supervisor.py</small><br>+3 more</td>
+  <td><code>asyncio</code><br><code>datetime</code><br><code>gemma_model.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/gemma_model.py</small><br>+11 more</td>
+  <td>Module file in src/deep_research_from_scratch/utils.py.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>Deduplicate search results by URL to avoid processing duplicate content. Args:…</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Deduplicate search results by URL to avoid processing duplicate content. Args:….</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>Process search results by summarizing content where available. Args:…</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Process search results by summarizing content where available. Args:….</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>Format search results into a well-structured string output. Args:…</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Format search results into a well-structured string output. Args:….</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>Fetch results from Tavily search API with content summarization. Args: query: A…</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Fetch results from Tavily search API with content summarization. Args: query: A….</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>Research Utilities and Tools. This module provides search and content…</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Research Utilities and Tools. This module provides search and content….</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>Perform search using Tavily API for multiple queries. Args: search_queries:…</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Perform search using Tavily API for multiple queries. Args: search_queries:….</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>Summarize webpage content using the configured summarization model. Args:…</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Summarize webpage content using the configured summarization model. Args:….</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>langchain_core_runnables</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>utils.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>langchain_core_runnables node in project.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>pathlib</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>learning_agent.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/learning_agent.py</small><br><code>utils.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>pathlib node in project.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>tavily</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>utils.py</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/utils.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>tavily node in project.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>src/deep_research_from_scratch/utils.py</code></td><td>14 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: explains x7, contains x6, calls x5, imports x3. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 6. Tests & Fixtures ====== -->
+<h2 id="tests-fixtures">6. Tests &amp; Fixtures</h2>
+<p>Tests &amp; Fixtures groups implementation around temporal, integration, test, research, mostly in temporal_integration/client.py, temporal_integration/schemas.py, tests/test_temporal_workflow.py. This section covers 189 nodes and 463 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Tests &amp; Fixtures (189 nodes, 463 edges)
+    subgraph tests_fixtures_temporal_integration_client_py_de5cfb19["temporal_integration/client.py"]
+        temporal_integration_client_aceworkflowclient_2ca7e218("ACEWorkflowClient<br/><small>temporal_integration/client.py</small>")
+        temporal_integration_client_aceworkflowclient_wa_bc2e1ddf("wait_for_result()<br/><small>temporal_integration/client.py</small>")
+        temporal_integration_client_aceworkflowclient_in_1d49f04e("__init__()<br/><small>temporal_integration/client.py</small>")
+        temporal_integration_client_aceworkflowclient_co_d80af8dd("connect()<br/><small>temporal_integration/client.py</small>")
+        temporal_integration_client_aceworkflowclient_st_edc2ca7b("start_research()<br/><small>temporal_integration/client.py</small>")
+        temporal_integration_client_aceworkflowclient_ge_87425844("get_handle()<br/><small>temporal_integration/client.py</small>")
+        temporal_integration_client_aceworkflowclient_ge_f59496f9("get_cognitive_state()<br/><small>temporal_integration/client.py</small>")
+        temporal_integration_client_aceworkflowclient_ge_c7a5f668("get_status()<br/><small>temporal_integration/client.py</small>")
+        temporal_integration_client_aceworkflowclient_is_4c8273d0("is_waiting_for_approval()<br/><small>temporal_integration/client.py</small>")
+    end
+    subgraph tests_fixtures_temporal_integration_workflows_py_10145404["temporal_integration/workflows.py"]
+        temporal_integration_workflows_aceresearchworkfl_c4f36afa("ACEResearchWorkflow<br/><small>temporal_integration/workflows.py</small>")
+        temporal_integration_workflows_aceresearchworkfl_87132c96("submit_approval()<br/><small>temporal_integration/workflows.py</small>")
+        temporal_integration_workflows_aceresearchworkfl_b2bfa559("__init__()<br/><small>temporal_integration/workflows.py</small>")
+        temporal_integration_workflows_aceresearchworkfl_be7b9da6("run()<br/><small>temporal_integration/workflows.py</small>")
+    end
+    temporal_integration_init_4d5c1608("__init__.py")
+    temporal_integration_worker_cecbca0e("worker.py")
+    tests_test_human_resume_8456dce5("test_human_resume.py")
+    tests_test_langsmith_integration_a76728a0("test_langsmith_integration.py")
+    tests_test_temporal_workflow_566e5264("test_temporal_workflow.py")
+    temporal_integration_workflows_aceresearchworkfl_c4f36afa -->|method| temporal_integration_workflows_aceresearchworkfl_87132c96
+    temporal_integration_workflows_aceresearchworkfl_c4f36afa -->|method| temporal_integration_workflows_aceresearchworkfl_b2bfa559
+    temporal_integration_workflows_aceresearchworkfl_c4f36afa -->|method| temporal_integration_workflows_aceresearchworkfl_be7b9da6
+    temporal_integration_client_aceworkflowclient_2ca7e218 -->|method| temporal_integration_client_aceworkflowclient_wa_bc2e1ddf
+    temporal_integration_client_aceworkflowclient_2ca7e218 -->|method| temporal_integration_client_aceworkflowclient_in_1d49f04e
+    temporal_integration_client_aceworkflowclient_2ca7e218 -->|method| temporal_integration_client_aceworkflowclient_co_d80af8dd
+    temporal_integration_client_aceworkflowclient_2ca7e218 -->|method| temporal_integration_client_aceworkflowclient_st_edc2ca7b
+    temporal_integration_client_aceworkflowclient_2ca7e218 -->|method| temporal_integration_client_aceworkflowclient_ge_87425844
+    temporal_integration_client_aceworkflowclient_2ca7e218 -->|method| temporal_integration_client_aceworkflowclient_ge_f59496f9
+    temporal_integration_client_aceworkflowclient_2ca7e218 -->|method| temporal_integration_client_aceworkflowclient_ge_c7a5f668
+    temporal_integration_client_aceworkflowclient_2ca7e218 -->|method| temporal_integration_client_aceworkflowclient_is_4c8273d0
+    temporal_integration_client_aceworkflowclient_ge_f59496f9 -->|calls| temporal_integration_client_aceworkflowclient_ge_87425844
+    temporal_integration_client_aceworkflowclient_ge_c7a5f668 -->|calls| temporal_integration_client_aceworkflowclient_ge_87425844
+    temporal_integration_client_aceworkflowclient_is_4c8273d0 -->|calls| temporal_integration_client_aceworkflowclient_ge_87425844
+    temporal_integration_client_aceworkflowclient_wa_bc2e1ddf -->|calls| temporal_integration_client_aceworkflowclient_ge_87425844
+    temporal_integration_init_4d5c1608 -->|imports| temporal_integration_client_aceworkflowclient_2ca7e218
+    temporal_integration_init_4d5c1608 -->|imports| temporal_integration_workflows_aceresearchworkfl_c4f36afa
+    temporal_integration_worker_cecbca0e -->|imports| temporal_integration_workflows_aceresearchworkfl_c4f36afa
+    tests_test_human_resume_8456dce5 -->|imports| temporal_integration_workflows_aceresearchworkfl_c4f36afa
+    tests_test_langsmith_integration_a76728a0 -->|imports| temporal_integration_workflows_aceresearchworkfl_c4f36afa
+    tests_test_temporal_workflow_566e5264 -->|imports| temporal_integration_workflows_aceresearchworkfl_c4f36afa
+    temporal_integration_client_aceworkflowclient_2ca7e218 -->|uses| temporal_integration_workflows_aceresearchworkfl_c4f36afa
+    %% Omitted for readability: 171 nodes, 0 edges
+    class temporal_integration_client_aceworkflowclient_2ca7e218 entry;
+    class temporal_integration_client_aceworkflowclient_wa_bc2e1ddf function;
+    class temporal_integration_client_aceworkflowclient_in_1d49f04e function;
+    class temporal_integration_client_aceworkflowclient_co_d80af8dd function;
+    class temporal_integration_client_aceworkflowclient_st_edc2ca7b function;
+    class temporal_integration_client_aceworkflowclient_ge_87425844 function;
+    class temporal_integration_client_aceworkflowclient_ge_f59496f9 function;
+    class temporal_integration_client_aceworkflowclient_ge_c7a5f668 function;
+    class temporal_integration_client_aceworkflowclient_is_4c8273d0 function;
+    class temporal_integration_workflows_aceresearchworkfl_c4f36afa klass;
+    class temporal_integration_workflows_aceresearchworkfl_87132c96 function;
+    class temporal_integration_workflows_aceresearchworkfl_b2bfa559 function;
+    class temporal_integration_workflows_aceresearchworkfl_be7b9da6 function;
+    class temporal_integration_init_4d5c1608 module;
+    class temporal_integration_worker_cecbca0e module;
+    class tests_test_human_resume_8456dce5 test;
+    class tests_test_langsmith_integration_a76728a0 test;
+    class tests_test_temporal_workflow_566e5264 test;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>ApprovalDecision</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">temporal_integration/__init__.py</small><br><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small><br><code>ACEWorkflowClient</code><br><small style="color:var(--muted)">temporal_integration/client.py</small><br>+7 more</td>
+  <td>No direct outbound edge</td>
+  <td>ApprovalDecision node in temporal_integration/schemas.py.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>FinalResearchOutput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">temporal_integration/__init__.py</small><br><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small><br><code>activities.py</code><br><small style="color:var(--muted)">temporal_integration/activities.py</small><br>+9 more</td>
+  <td>No direct outbound edge</td>
+  <td>FinalResearchOutput node in temporal_integration/schemas.py.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>ResearchWorkflowInput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">temporal_integration/__init__.py</small><br><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small><br><code>ACEWorkflowClient</code><br><small style="color:var(--muted)">temporal_integration/client.py</small><br>+22 more</td>
+  <td>No direct outbound edge</td>
+  <td>ResearchWorkflowInput node in temporal_integration/schemas.py.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>ResearchWorkflowResult</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">temporal_integration/__init__.py</small><br><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small><br><code>ACEWorkflowClient</code><br><small style="color:var(--muted)">temporal_integration/client.py</small><br>+8 more</td>
+  <td>No direct outbound edge</td>
+  <td>ResearchWorkflowResult node in temporal_integration/schemas.py.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>ResumeResearchInput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">temporal_integration/__init__.py</small><br><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small><br><code>activities.py</code><br><small style="color:var(--muted)">temporal_integration/activities.py</small><br>+10 more</td>
+  <td>No direct outbound edge</td>
+  <td>ResumeResearchInput node in temporal_integration/schemas.py.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>ScopingOutput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">temporal_integration/__init__.py</small><br><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small><br><code>activities.py</code><br><small style="color:var(--muted)">temporal_integration/activities.py</small><br>+10 more</td>
+  <td>No direct outbound edge</td>
+  <td>ScopingOutput node in temporal_integration/schemas.py.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">temporal_integration/__init__.py</small><br><code>ACEWorkflowClient</code><br><small style="color:var(--muted)">temporal_integration/client.py</small><br><code>client.py</code><br><small style="color:var(--muted)">temporal_integration/client.py</small><br>+13 more</td>
+  <td><code>__init__()</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small><br><code>ApprovalDecision</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br><code>FinalResearchOutput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br>+9 more</td>
+  <td>ACEResearchWorkflow node in temporal_integration/workflows.py.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>execute_research_and_report_activity()</code><br><small style="color:var(--muted)">temporal_integration/activities.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">temporal_integration/__init__.py</small><br><code>create_temporal_worker()</code><br><small style="color:var(--muted)">temporal_integration/worker.py</small><br><code>pass research activity()</code><br><small style="color:var(--muted)">temporal_integration/activities.py</small><br>+1 more</td>
+  <td><code>FinalResearchOutput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br><code>get_cognitive_snapshot()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/generate_checkpoint.py</small><br><code>json</code><br>+1 more</td>
+  <td>execute_research_and_report_activity() node in temporal_integration/activities.py.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>execute_single_pass_research_activity()</code><br><small style="color:var(--muted)">temporal_integration/activities.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">temporal_integration/__init__.py</small><br><code>create_temporal_worker()</code><br><small style="color:var(--muted)">temporal_integration/worker.py</small><br><code>worker.py</code><br><small style="color:var(--muted)">temporal_integration/worker.py</small></td>
+  <td><code>and planning activity()</code><br><small style="color:var(--muted)">temporal_integration/activities.py</small><br><code>and report activity()</code><br><small style="color:var(--muted)">temporal_integration/activities.py</small><br><code>FinalResearchOutput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br>+2 more</td>
+  <td>execute_single_pass_research_activity() node in temporal_integration/activities.py.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>run_scoping_and_planning_activity()</code><br><small style="color:var(--muted)">temporal_integration/activities.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">temporal_integration/__init__.py</small><br><code>create_temporal_worker()</code><br><small style="color:var(--muted)">temporal_integration/worker.py</small><br><code>pass research activity()</code><br><small style="color:var(--muted)">temporal_integration/activities.py</small><br>+1 more</td>
+  <td><code>get_cognitive_snapshot()</code><br><small style="color:var(--muted)">src/deep_research_from_scratch/generate_checkpoint.py</small><br><code>ResearchWorkflowInput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br><code>ScopingOutput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br>+1 more</td>
+  <td>run_scoping_and_planning_activity() node in temporal_integration/activities.py.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>create_temporal_worker()</code><br><small style="color:var(--muted)">temporal_integration/worker.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">temporal_integration/__init__.py</small><br><code>demo_ace_temporal.py</code><br><small style="color:var(--muted)">demo_ace_temporal.py</small><br><code>run_interactive_demo()</code><br><small style="color:var(--muted)">demo_ace_temporal.py</small><br>+1 more</td>
+  <td><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small><br><code>and planning activity()</code><br><small style="color:var(--muted)">temporal_integration/activities.py</small><br><code>and report activity()</code><br><small style="color:var(--muted)">temporal_integration/activities.py</small><br>+4 more</td>
+  <td>create_temporal_worker() node in temporal_integration/worker.py.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>run_worker()</code><br><small style="color:var(--muted)">temporal_integration/worker.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">temporal_integration/__init__.py</small></td>
+  <td><code>asyncio</code><br><code>create_temporal_worker()</code><br><small style="color:var(--muted)">temporal_integration/worker.py</small><br><code>get_langsmith_plugin()</code><br><small style="color:var(--muted)">temporal_integration/config.py</small><br>+3 more</td>
+  <td>run_worker() node in temporal_integration/worker.py.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>signal_handler()</code><br><small style="color:var(--muted)">temporal_integration/worker.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>run_worker()</code><br><small style="color:var(--muted)">temporal_integration/worker.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>signal_handler() node in temporal_integration/worker.py.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>.__init__()</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>.__init__() node in temporal_integration/workflows.py.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>.run()</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small></td>
+  <td><code>ResumeResearchInput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small></td>
+  <td>.run() node in temporal_integration/workflows.py.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>.submit_approval()</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>.submit_approval() node in temporal_integration/workflows.py.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>mock_research_track_resume()</code><br><small style="color:var(--muted)">tests/test_human_resume.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>handles rejection cleanly()</code><br><small style="color:var(--muted)">tests/test_human_resume.py</small><br><code>resumes with approval()</code><br><small style="color:var(--muted)">tests/test_human_resume.py</small><br><code>with replanning directive()</code><br><small style="color:var(--muted)">tests/test_human_resume.py</small></td>
+  <td><code>FinalResearchOutput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br><code>ResumeResearchInput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small></td>
+  <td>mock_research_track_resume() node in tests/test_human_resume.py.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>mock_scoping_pause_activity()</code><br><small style="color:var(--muted)">tests/test_human_resume.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>handles rejection cleanly()</code><br><small style="color:var(--muted)">tests/test_human_resume.py</small><br><code>resumes with approval()</code><br><small style="color:var(--muted)">tests/test_human_resume.py</small><br><code>with replanning directive()</code><br><small style="color:var(--muted)">tests/test_human_resume.py</small></td>
+  <td><code>ResearchWorkflowInput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br><code>ScopingOutput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small></td>
+  <td>mock_scoping_pause_activity() node in tests/test_human_resume.py.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>test_workflow_handles_rejection_cleanly()</code><br><small style="color:var(--muted)">tests/test_human_resume.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small><br><code>ApprovalDecision</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br><code>mock_research_track_resume()</code><br><small style="color:var(--muted)">tests/test_human_resume.py</small><br>+3 more</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>test_workflow_pauses_and_resumes_with_approval()</code><br><small style="color:var(--muted)">tests/test_human_resume.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small><br><code>ApprovalDecision</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br><code>mock_research_track_resume()</code><br><small style="color:var(--muted)">tests/test_human_resume.py</small><br>+3 more</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>test_workflow_resumes_with_replanning_directive()</code><br><small style="color:var(--muted)">tests/test_human_resume.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small><br><code>ApprovalDecision</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br><code>mock_research_track_resume()</code><br><small style="color:var(--muted)">tests/test_human_resume.py</small><br>+3 more</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>mock_obs_research()</code><br><small style="color:var(--muted)">tests/test_langsmith_integration.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>langsmith plugin attached()</code><br><small style="color:var(--muted)">tests/test_langsmith_integration.py</small></td>
+  <td><code>FinalResearchOutput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br><code>ResumeResearchInput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small></td>
+  <td>mock_obs_research() node in tests/test_langsmith_integration.py.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>mock_obs_scoping()</code><br><small style="color:var(--muted)">tests/test_langsmith_integration.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>langsmith plugin attached()</code><br><small style="color:var(--muted)">tests/test_langsmith_integration.py</small></td>
+  <td><code>ResearchWorkflowInput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br><code>ScopingOutput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small></td>
+  <td>mock_obs_scoping() node in tests/test_langsmith_integration.py.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>test_workflow_runs_with_langsmith_plugin_attached()</code><br><small style="color:var(--muted)">tests/test_langsmith_integration.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small><br><code>mock_obs_research()</code><br><small style="color:var(--muted)">tests/test_langsmith_integration.py</small><br><code>mock_obs_scoping()</code><br><small style="color:var(--muted)">tests/test_langsmith_integration.py</small><br>+1 more</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>mock_clarification_scoping_activity()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>returns clarification needed()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small></td>
+  <td><code>ResearchWorkflowInput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br><code>ScopingOutput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small></td>
+  <td>mock_clarification_scoping_activity() node in tests/test_temporal_workflow.py.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>mock_failing_then_succeeding_scoping()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>retried and succeeds()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small></td>
+  <td><code>ResearchWorkflowInput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br><code>ScopingOutput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small></td>
+  <td>mock_failing_then_succeeding_scoping() node in tests/test_temporal_workflow.py.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>mock_research_activity()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>complete auto approve()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small><br><code>fails non retryable()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small><br><code>retried and succeeds()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small><br>+1 more</td>
+  <td><code>FinalResearchOutput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br><code>ResumeResearchInput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small></td>
+  <td>mock_research_activity() node in tests/test_temporal_workflow.py.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>mock_scoping_activity()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>complete auto approve()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small><br><code>fails non retryable()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small></td>
+  <td><code>ResearchWorkflowInput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small><br><code>ScopingOutput</code><br><small style="color:var(--muted)">temporal_integration/schemas.py</small></td>
+  <td>mock_scoping_activity() node in tests/test_temporal_workflow.py.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>test_invalid_empty_input_fails_non_retryable()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small><br><code>mock_research_activity()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small><br><code>mock_scoping_activity()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small><br>+1 more</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>test_scoping_clarification_path_returns_clarification_needed()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>ACEResearchWorkflow</code><br><small style="color:var(--muted)">temporal_integration/workflows.py</small><br><code>clarification scoping activity()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small><br><code>mock_research_activity()</code><br><small style="color:var(--muted)">tests/test_temporal_workflow.py</small><br>+1 more</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>temporal_integration/client.py</code></td><td>22 nodes</td></tr>
+<tr><td><code>temporal_integration/schemas.py</code></td><td>14 nodes</td></tr>
+<tr><td><code>tests/test_temporal_workflow.py</code></td><td>14 nodes</td></tr>
+<tr><td><code>src/deep_research_from_scratch/generate_checkpoint.py</code></td><td>11 nodes</td></tr>
+<tr><td><code>src/deep_research_from_scratch/gemma_model.py</code></td><td>10 nodes</td></tr>
+<tr><td><code>temporal_integration/workflows.py</code></td><td>10 nodes</td></tr>
+<tr><td><code>tests/test_human_resume.py</code></td><td>10 nodes</td></tr>
+<tr><td><code>tests/test_langsmith_integration.py</code></td><td>10 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: imports x94, explains x66, uses x60, calls x57. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 7. Console & Notebook Formatting Utilities ====== -->
+<h2 id="console-notebook-formatting-utilities">7. Console &amp; Notebook Formatting Utilities</h2>
+<p>Console &amp; Notebook Formatting Utilities groups implementation around notebooks, utilspy, format, rich, mostly in notebooks/utils.py. This section covers 15 nodes and 16 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Console &amp; Notebook Formatting Utilities (15 nodes, 16 edges)
+    subgraph console_notebook_formatting_utilities_notebooks_d33505bf["notebooks/utils.py"]
+        notebooks_utils_75d0a96f("utils.py")
+        notebooks_utils_format_message_f49c01b6("format_message()<br/><small>notebooks/utils.py</small>")
+        notebooks_utils_safepopen_bf4bd344("SafePopen<br/><small>notebooks/utils.py</small>")
+        notebooks_utils_format_messages_2d5ef7ca("format_messages()<br/><small>notebooks/utils.py</small>")
+        notebooks_utils_safepopen_init_f997a0c0("__init__()<br/><small>notebooks/utils.py</small>")
+        notebooks_utils_format_message_content_3eb9a4f4("format_message_content()<br/><small>notebooks/utils.py</small>")
+        notebooks_utils_show_prompt_b7cf4aa2("show_prompt()<br/><small>notebooks/utils.py</small>")
+        notebooks_utils_rationale_56_35bf75a3("Alias for format_messages for backward...<br/><small>notebooks/utils.py</small>")
+        notebooks_utils_rationale_9_84339460("Convert message content to displayable...<br/><small>notebooks/utils.py</small>")
+        notebooks_utils_rationale_61_7ab74d90("Display a prompt with rich formatting a...<br/><small>notebooks/utils.py</small>")
+        notebooks_utils_rationale_40_d20ce656("Format and display a list of messages w...<br/><small>notebooks/utils.py</small>")
+    end
+    subgraph console_notebook_formatting_utilities_External_g_019c8dae["External / generated"]
+        subprocess_d2d1e1c0("subprocess")
+        rich_console_73ffae5d("rich_console")
+        rich_panel_40793498("rich_panel")
+        rich_text_e9b9c88b("rich_text")
+    end
+    notebooks_utils_safepopen_bf4bd344 -->|method| notebooks_utils_safepopen_init_f997a0c0
+    notebooks_utils_format_message_f49c01b6 -->|calls| notebooks_utils_format_messages_2d5ef7ca
+    notebooks_utils_format_messages_2d5ef7ca -->|calls| notebooks_utils_format_message_content_3eb9a4f4
+    notebooks_utils_75d0a96f -->|imports| subprocess_d2d1e1c0
+    notebooks_utils_75d0a96f -->|imports| rich_console_73ffae5d
+    notebooks_utils_75d0a96f -->|imports| rich_panel_40793498
+    notebooks_utils_75d0a96f -->|imports| rich_text_e9b9c88b
+    class notebooks_utils_75d0a96f module;
+    class notebooks_utils_format_message_f49c01b6 function;
+    class notebooks_utils_safepopen_bf4bd344 klass;
+    class notebooks_utils_format_messages_2d5ef7ca function;
+    class notebooks_utils_safepopen_init_f997a0c0 function;
+    class notebooks_utils_format_message_content_3eb9a4f4 function;
+    class notebooks_utils_show_prompt_b7cf4aa2 function;
+    class notebooks_utils_rationale_56_35bf75a3 concept;
+    class notebooks_utils_rationale_9_84339460 concept;
+    class notebooks_utils_rationale_61_7ab74d90 concept;
+    class notebooks_utils_rationale_40_d20ce656 concept;
+    class subprocess_d2d1e1c0 function;
+    class rich_console_73ffae5d function;
+    class rich_panel_40793498 function;
+    class rich_text_e9b9c88b function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>SafePopen</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>__init__()</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td>SafePopen node in notebooks/utils.py.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>format_message()</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>format_messages()</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td>format_message() node in notebooks/utils.py.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>format_message_content()</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>format_messages()</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td><code>json</code></td>
+  <td>format_message_content() node in notebooks/utils.py.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>format_messages()</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>format_message()</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td><code>format_message_content()</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td>format_messages() node in notebooks/utils.py.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>.__init__()</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>SafePopen</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>.__init__() node in notebooks/utils.py.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>show_prompt()</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Builds structured prompts for model calls.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>notebooks/utils.py</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>json</code><br><code>os</code><br><code>rich_console</code><br>+4 more</td>
+  <td>Module file in notebooks/utils.py.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>Format and display a list of messages with Rich formatting</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Format and display a list of messages with Rich formatting.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>Alias for format_messages for backward compatibility</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Alias for format_messages for backward compatibility.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>Display a prompt with rich formatting and XML tag highlighting. Args:…</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Display a prompt with rich formatting and XML tag highlighting. Args:….</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>Convert message content to displayable string</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Convert message content to displayable string.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>rich_console</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>utils.py</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>rich_console node in project.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>rich_panel</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>utils.py</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>rich_panel node in project.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>rich_text</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>utils.py</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>rich_text node in project.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>subprocess</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>utils.py</code><br><small style="color:var(--muted)">notebooks/utils.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>subprocess node in project.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>notebooks/utils.py</code></td><td>11 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x5, explains x4, imports x3, calls x2. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 8. Docker Compose Service Specifications ====== -->
+<h2 id="docker-compose-service-specifications">8. Docker Compose Service Specifications</h2>
+<p>Docker Compose Service Specifications groups implementation around docker, composeyml, command, container, mostly in docker-compose.yml. This section covers 8 nodes and 7 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Docker Compose Service Specifications (8 nodes, 7 edges)
+    docker_compose_services_jupyter_d949c265("jupyter<br/><small>docker-compose.yml</small>")
+    docker_compose_jupyter_command_bc9994e8("command<br/><small>docker-compose.yml</small>")
+    docker_compose_jupyter_container_name_a42e3ba5("container_name<br/><small>docker-compose.yml</small>")
+    docker_compose_jupyter_env_file_6729c2eb("env_file<br/><small>docker-compose.yml</small>")
+    docker_compose_jupyter_environment_4f29e9b8("environment<br/><small>docker-compose.yml</small>")
+    docker_compose_jupyter_ports_bae1deb5("ports<br/><small>docker-compose.yml</small>")
+    docker_compose_jupyter_profiles_e9f33336("profiles<br/><small>docker-compose.yml</small>")
+    docker_compose_jupyter_volumes_0e432c5f("volumes<br/><small>docker-compose.yml</small>")
+    docker_compose_services_jupyter_d949c265 -->|contains| docker_compose_jupyter_command_bc9994e8
+    docker_compose_services_jupyter_d949c265 -->|contains| docker_compose_jupyter_container_name_a42e3ba5
+    docker_compose_services_jupyter_d949c265 -->|contains| docker_compose_jupyter_env_file_6729c2eb
+    docker_compose_services_jupyter_d949c265 -->|contains| docker_compose_jupyter_environment_4f29e9b8
+    docker_compose_services_jupyter_d949c265 -->|contains| docker_compose_jupyter_ports_bae1deb5
+    docker_compose_services_jupyter_d949c265 -->|contains| docker_compose_jupyter_profiles_e9f33336
+    docker_compose_services_jupyter_d949c265 -->|contains| docker_compose_jupyter_volumes_0e432c5f
+    class docker_compose_services_jupyter_d949c265 function;
+    class docker_compose_jupyter_command_bc9994e8 entry;
+    class docker_compose_jupyter_container_name_a42e3ba5 function;
+    class docker_compose_jupyter_env_file_6729c2eb function;
+    class docker_compose_jupyter_environment_4f29e9b8 function;
+    class docker_compose_jupyter_ports_bae1deb5 function;
+    class docker_compose_jupyter_profiles_e9f33336 function;
+    class docker_compose_jupyter_volumes_0e432c5f function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>command</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-cmd">Entry</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>command node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>container_name</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>container_name node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>env_file</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>env_file node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>environment</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>environment node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>ports</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>ports node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>profiles</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>profiles node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>volumes</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>volumes node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>jupyter</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>jupyter node in docker-compose.yml.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>docker-compose.yml</code></td><td>8 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x7. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 9. Temporal Worker Service Config ====== -->
+<h2 id="temporal-worker-service-config">9. Temporal Worker Service Config</h2>
+<p>Temporal Worker Service Config groups implementation around docker, composeyml, temporal, worker, mostly in docker-compose.yml. This section covers 8 nodes and 7 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Temporal Worker Service Config (8 nodes, 7 edges)
+    docker_compose_services_temporal_worker_fa678591("temporal-worker<br/><small>docker-compose.yml</small>")
+    docker_compose_temporal_worker_command_f280f7d5("command<br/><small>docker-compose.yml</small>")
+    docker_compose_temporal_worker_container_name_14dfba5e("container_name<br/><small>docker-compose.yml</small>")
+    docker_compose_temporal_worker_depends_on_75f36b39("depends_on<br/><small>docker-compose.yml</small>")
+    docker_compose_temporal_worker_env_file_23437e1d("env_file<br/><small>docker-compose.yml</small>")
+    docker_compose_temporal_worker_environment_2aaa46ff("environment<br/><small>docker-compose.yml</small>")
+    docker_compose_temporal_worker_restart_8b9beda0("restart<br/><small>docker-compose.yml</small>")
+    docker_compose_temporal_worker_volumes_5b687139("volumes<br/><small>docker-compose.yml</small>")
+    docker_compose_services_temporal_worker_fa678591 -->|contains| docker_compose_temporal_worker_command_f280f7d5
+    docker_compose_services_temporal_worker_fa678591 -->|contains| docker_compose_temporal_worker_container_name_14dfba5e
+    docker_compose_services_temporal_worker_fa678591 -->|contains| docker_compose_temporal_worker_depends_on_75f36b39
+    docker_compose_services_temporal_worker_fa678591 -->|contains| docker_compose_temporal_worker_env_file_23437e1d
+    docker_compose_services_temporal_worker_fa678591 -->|contains| docker_compose_temporal_worker_environment_2aaa46ff
+    docker_compose_services_temporal_worker_fa678591 -->|contains| docker_compose_temporal_worker_restart_8b9beda0
+    docker_compose_services_temporal_worker_fa678591 -->|contains| docker_compose_temporal_worker_volumes_5b687139
+    class docker_compose_services_temporal_worker_fa678591 function;
+    class docker_compose_temporal_worker_command_f280f7d5 entry;
+    class docker_compose_temporal_worker_container_name_14dfba5e function;
+    class docker_compose_temporal_worker_depends_on_75f36b39 function;
+    class docker_compose_temporal_worker_env_file_23437e1d function;
+    class docker_compose_temporal_worker_environment_2aaa46ff function;
+    class docker_compose_temporal_worker_restart_8b9beda0 function;
+    class docker_compose_temporal_worker_volumes_5b687139 function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>temporal-worker</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>temporal-worker node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>command</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-cmd">Entry</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>command node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>container_name</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>container_name node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>depends_on</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>depends_on node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>env_file</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>env_file node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>environment</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>environment node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>restart</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>restart node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>volumes</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>volumes node in docker-compose.yml.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>docker-compose.yml</code></td><td>8 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x7. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 10. Docker Infrastructure & Volumes ====== -->
+<h2 id="docker-infrastructure-volumes">10. Docker Infrastructure &amp; Volumes</h2>
+<p>Docker Infrastructure &amp; Volumes groups implementation around docker, composeyml, driver, services, mostly in docker-compose.yml. This section covers 7 nodes and 6 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Docker Infrastructure &amp; Volumes (7 nodes, 6 edges)
+    docker_compose_b3e2b485("docker-compose.yml")
+    docker_compose_volumes_6898014b("volumes<br/><small>docker-compose.yml</small>")
+    docker_compose_volumes_research_reports_fc562c0b("research_reports<br/><small>docker-compose.yml</small>")
+    docker_compose_volumes_temporal_data_1b896a91("temporal_data<br/><small>docker-compose.yml</small>")
+    docker_compose_services_3e2f8ac7("services<br/><small>docker-compose.yml</small>")
+    docker_compose_research_reports_driver_6904d747("driver<br/><small>docker-compose.yml</small>")
+    docker_compose_temporal_data_driver_7ad9eca6("driver<br/><small>docker-compose.yml</small>")
+    docker_compose_b3e2b485 -->|contains| docker_compose_services_3e2f8ac7
+    docker_compose_b3e2b485 -->|contains| docker_compose_volumes_6898014b
+    docker_compose_volumes_6898014b -->|contains| docker_compose_volumes_research_reports_fc562c0b
+    docker_compose_volumes_6898014b -->|contains| docker_compose_volumes_temporal_data_1b896a91
+    docker_compose_volumes_research_reports_fc562c0b -->|contains| docker_compose_research_reports_driver_6904d747
+    docker_compose_volumes_temporal_data_1b896a91 -->|contains| docker_compose_temporal_data_driver_7ad9eca6
+    class docker_compose_b3e2b485 function;
+    class docker_compose_volumes_6898014b function;
+    class docker_compose_volumes_research_reports_fc562c0b function;
+    class docker_compose_volumes_temporal_data_1b896a91 function;
+    class docker_compose_services_3e2f8ac7 function;
+    class docker_compose_research_reports_driver_6904d747 function;
+    class docker_compose_temporal_data_driver_7ad9eca6 function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>docker-compose.yml</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>docker-compose.yml node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>driver</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>driver node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>services</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>services node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>driver</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>driver node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>volumes</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>volumes node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>research_reports</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>research_reports node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>temporal_data</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>temporal_data node in docker-compose.yml.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>docker-compose.yml</code></td><td>7 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x6. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 11. Container Environment Configuration ====== -->
+<h2 id="container-environment-configuration">11. Container Environment Configuration</h2>
+<p>Container Environment Configuration groups implementation around docker, composeyml, container, name, mostly in docker-compose.yml. This section covers 7 nodes and 6 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Container Environment Configuration (7 nodes, 6 edges)
+    docker_compose_services_deep_research_93a0e61a("deep-research<br/><small>docker-compose.yml</small>")
+    docker_compose_deep_research_container_name_69ea5e52("container_name<br/><small>docker-compose.yml</small>")
+    docker_compose_deep_research_env_file_c056a2d2("env_file<br/><small>docker-compose.yml</small>")
+    docker_compose_deep_research_environment_403b4188("environment<br/><small>docker-compose.yml</small>")
+    docker_compose_deep_research_ports_535d6e7e("ports<br/><small>docker-compose.yml</small>")
+    docker_compose_deep_research_restart_9950138f("restart<br/><small>docker-compose.yml</small>")
+    docker_compose_deep_research_volumes_e69eb63b("volumes<br/><small>docker-compose.yml</small>")
+    docker_compose_services_deep_research_93a0e61a -->|contains| docker_compose_deep_research_container_name_69ea5e52
+    docker_compose_services_deep_research_93a0e61a -->|contains| docker_compose_deep_research_env_file_c056a2d2
+    docker_compose_services_deep_research_93a0e61a -->|contains| docker_compose_deep_research_environment_403b4188
+    docker_compose_services_deep_research_93a0e61a -->|contains| docker_compose_deep_research_ports_535d6e7e
+    docker_compose_services_deep_research_93a0e61a -->|contains| docker_compose_deep_research_restart_9950138f
+    docker_compose_services_deep_research_93a0e61a -->|contains| docker_compose_deep_research_volumes_e69eb63b
+    class docker_compose_services_deep_research_93a0e61a function;
+    class docker_compose_deep_research_container_name_69ea5e52 function;
+    class docker_compose_deep_research_env_file_c056a2d2 function;
+    class docker_compose_deep_research_environment_403b4188 function;
+    class docker_compose_deep_research_ports_535d6e7e function;
+    class docker_compose_deep_research_restart_9950138f function;
+    class docker_compose_deep_research_volumes_e69eb63b function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>container_name</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>container_name node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>env_file</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>env_file node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>environment</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>environment node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>ports</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>ports node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>restart</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>restart node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>volumes</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>volumes node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>deep-research</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>deep-research node in docker-compose.yml.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>docker-compose.yml</code></td><td>7 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x6. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 12. Container Resource Allocations ====== -->
+<h2 id="container-resource-allocations">12. Container Resource Allocations</h2>
+<p>Container Resource Allocations groups implementation around docker, composeyml, deploy, memory, mostly in docker-compose.yml. This section covers 7 nodes and 6 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Container Resource Allocations (7 nodes, 6 edges)
+    docker_compose_deep_research_deploy_2d2d3125("deploy<br/><small>docker-compose.yml</small>")
+    docker_compose_jupyter_deploy_7865ed4e("deploy<br/><small>docker-compose.yml</small>")
+    docker_compose_deploy_resources_06ecf331("resources<br/><small>docker-compose.yml</small>")
+    docker_compose_resources_limits_082b6b4b("limits<br/><small>docker-compose.yml</small>")
+    docker_compose_resources_reservations_d0c01bff("reservations<br/><small>docker-compose.yml</small>")
+    docker_compose_limits_memory_d0f8c46d("memory<br/><small>docker-compose.yml</small>")
+    docker_compose_reservations_memory_3318f61c("memory<br/><small>docker-compose.yml</small>")
+    docker_compose_deep_research_deploy_2d2d3125 -->|contains| docker_compose_deploy_resources_06ecf331
+    docker_compose_deploy_resources_06ecf331 -->|contains| docker_compose_resources_limits_082b6b4b
+    docker_compose_deploy_resources_06ecf331 -->|contains| docker_compose_resources_reservations_d0c01bff
+    docker_compose_jupyter_deploy_7865ed4e -->|contains| docker_compose_deploy_resources_06ecf331
+    docker_compose_resources_limits_082b6b4b -->|contains| docker_compose_limits_memory_d0f8c46d
+    docker_compose_resources_reservations_d0c01bff -->|contains| docker_compose_reservations_memory_3318f61c
+    class docker_compose_deep_research_deploy_2d2d3125 function;
+    class docker_compose_jupyter_deploy_7865ed4e function;
+    class docker_compose_deploy_resources_06ecf331 function;
+    class docker_compose_resources_limits_082b6b4b function;
+    class docker_compose_resources_reservations_d0c01bff function;
+    class docker_compose_limits_memory_d0f8c46d function;
+    class docker_compose_reservations_memory_3318f61c function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>deploy</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>deploy node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>resources</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>resources node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>deploy</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>deploy node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>memory</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>memory node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>memory</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>memory node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>limits</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>limits node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>reservations</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>reservations node in docker-compose.yml.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>docker-compose.yml</code></td><td>7 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x6. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 13. Temporal Server Service Config ====== -->
+<h2 id="temporal-server-service-config">13. Temporal Server Service Config</h2>
+<p>Temporal Server Service Config groups implementation around docker, composeyml, temporal, container, mostly in docker-compose.yml. This section covers 7 nodes and 6 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Temporal Server Service Config (7 nodes, 6 edges)
+    docker_compose_services_temporal_b5c1e856("temporal<br/><small>docker-compose.yml</small>")
+    docker_compose_temporal_container_name_ded0fcf1("container_name<br/><small>docker-compose.yml</small>")
+    docker_compose_temporal_environment_f121c3ed("environment<br/><small>docker-compose.yml</small>")
+    docker_compose_temporal_image_9acf5397("image<br/><small>docker-compose.yml</small>")
+    docker_compose_temporal_ports_4158acfb("ports<br/><small>docker-compose.yml</small>")
+    docker_compose_temporal_restart_9ffd4f23("restart<br/><small>docker-compose.yml</small>")
+    docker_compose_temporal_volumes_7d4477ee("volumes<br/><small>docker-compose.yml</small>")
+    docker_compose_services_temporal_b5c1e856 -->|contains| docker_compose_temporal_container_name_ded0fcf1
+    docker_compose_services_temporal_b5c1e856 -->|contains| docker_compose_temporal_environment_f121c3ed
+    docker_compose_services_temporal_b5c1e856 -->|contains| docker_compose_temporal_image_9acf5397
+    docker_compose_services_temporal_b5c1e856 -->|contains| docker_compose_temporal_ports_4158acfb
+    docker_compose_services_temporal_b5c1e856 -->|contains| docker_compose_temporal_restart_9ffd4f23
+    docker_compose_services_temporal_b5c1e856 -->|contains| docker_compose_temporal_volumes_7d4477ee
+    class docker_compose_services_temporal_b5c1e856 function;
+    class docker_compose_temporal_container_name_ded0fcf1 function;
+    class docker_compose_temporal_environment_f121c3ed function;
+    class docker_compose_temporal_image_9acf5397 function;
+    class docker_compose_temporal_ports_4158acfb function;
+    class docker_compose_temporal_restart_9ffd4f23 function;
+    class docker_compose_temporal_volumes_7d4477ee function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>temporal</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>temporal node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>container_name</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>container_name node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>environment</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>environment node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>image</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>image node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>ports</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>ports node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>restart</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>restart node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>volumes</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>volumes node in docker-compose.yml.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>docker-compose.yml</code></td><td>7 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x6. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 14. Container Health Checks & Liveness ====== -->
+<h2 id="container-health-checks-liveness">14. Container Health Checks &amp; Liveness</h2>
+<p>Container Health Checks &amp; Liveness groups implementation around docker, composeyml, healthcheck, interval, mostly in docker-compose.yml. This section covers 6 nodes and 5 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Container Health Checks &amp; Liveness (6 nodes, 5 edges)
+    docker_compose_deep_research_healthcheck_d00c2677("healthcheck<br/><small>docker-compose.yml</small>")
+    docker_compose_healthcheck_interval_c7e98c4f("interval<br/><small>docker-compose.yml</small>")
+    docker_compose_healthcheck_retries_d90004a4("retries<br/><small>docker-compose.yml</small>")
+    docker_compose_healthcheck_start_period_320b5bd4("start_period<br/><small>docker-compose.yml</small>")
+    docker_compose_healthcheck_test_82fd63b7("test<br/><small>docker-compose.yml</small>")
+    docker_compose_healthcheck_timeout_12fc11a0("timeout<br/><small>docker-compose.yml</small>")
+    docker_compose_deep_research_healthcheck_d00c2677 -->|contains| docker_compose_healthcheck_interval_c7e98c4f
+    docker_compose_deep_research_healthcheck_d00c2677 -->|contains| docker_compose_healthcheck_retries_d90004a4
+    docker_compose_deep_research_healthcheck_d00c2677 -->|contains| docker_compose_healthcheck_start_period_320b5bd4
+    docker_compose_deep_research_healthcheck_d00c2677 -->|contains| docker_compose_healthcheck_test_82fd63b7
+    docker_compose_deep_research_healthcheck_d00c2677 -->|contains| docker_compose_healthcheck_timeout_12fc11a0
+    class docker_compose_deep_research_healthcheck_d00c2677 function;
+    class docker_compose_healthcheck_interval_c7e98c4f function;
+    class docker_compose_healthcheck_retries_d90004a4 function;
+    class docker_compose_healthcheck_start_period_320b5bd4 function;
+    class docker_compose_healthcheck_test_82fd63b7 function;
+    class docker_compose_healthcheck_timeout_12fc11a0 function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>healthcheck</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>healthcheck node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>interval</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>interval node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>retries</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>retries node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>start_period</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>start_period node in docker-compose.yml.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>test</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>timeout</code><br><small style="color:var(--muted)">docker-compose.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>timeout node in docker-compose.yml.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>docker-compose.yml</code></td><td>6 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x5. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 15. Durable Execution Concepts ====== -->
+<h2 id="durable-execution-concepts">15. Durable Execution Concepts</h2>
+<p>Durable Execution Concepts groups implementation around durable, agent, execution, readmemd, mostly in README.md. This section covers 1 nodes and 0 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Durable Execution Concepts (1 nodes, 0 edges)
+    durable_agent_execution_c19747d0("Durable Agent Execution<br/><small>README.md</small>")
+    class durable_agent_execution_c19747d0 klass;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>Durable Agent Execution</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Durable Agent Execution node in README.md.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>README.md</code></td><td>1 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: No high-confidence call edges detected. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 16. Other ====== -->
+<h2 id="other">16. Other</h2>
+<p>Other groups implementation around start, studiops1, deep, research, mostly in pyproject.toml, start_studio.ps1. This section covers 2 nodes and 0 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Other (2 nodes, 0 edges)
+    pkg_deep_research_from_scratch_a998f11a("deep_research_from_scratch<br/><small>pyproject.toml</small>")
+    start_studio_ee72fe66("start_studio.ps1")
+    class pkg_deep_research_from_scratch_a998f11a module;
+    class start_studio_ee72fe66 function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>deep_research_from_scratch</code><br><small style="color:var(--muted)">pyproject.toml</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>deep_research_from_scratch node in pyproject.toml.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>start_studio.ps1</code><br><small style="color:var(--muted)">start_studio.ps1</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>start_studio.ps1 node in start_studio.ps1.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>pyproject.toml</code></td><td>1 nodes</td></tr>
+<tr><td><code>start_studio.ps1</code></td><td>1 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: No high-confidence call edges detected. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<h2 id="hyperedges">Group Relationships (Hyperedges)</h2>
+<div class="grid">
+
+  <div class="card">
+    <h4>ACE 3-Tier Foundation (Research + Durability + Observability)</h4>
+    <p><code>form</code> — 3 participants</p>
+    <ul>
+      <li><code>tier_1_multi_agent_research</code></li>
+      <li><code>tier_2_temporal_durability</code></li>
+      <li><code>tier_3_langsmith_observability</code></li>
+    </ul>
+  </div>
+</div>
+<hr>
+<h2 id="stats">Project Statistics</h2>
+
+<div class="grid">
+  <div class="card">
+    <h4>Graph</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><td>Nodes</td><td>535</td></tr>
+      <tr><td>Edges</td><td>1138</td></tr>
+      <tr><td>Hyperedges</td><td>1</td></tr>
+      <tr><td>Communities</td><td>28</td></tr>
+      <tr><td>Documented Sections</td><td>15</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Edge Confidence</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><td>EXTRACTED</td><td>1010</td></tr>
+      <tr><td>INFERRED</td><td>128</td></tr>
+      <tr><td>AMBIGUOUS</td><td>0</td></tr>
+    </table>
+  </div>
+</div>
+
+<div style="text-align:center; padding:40px 0; color: var(--muted); font-size:0.9rem;">
+  <p>Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks — Architecture Documentation</p>
+  <p>Generated: 2026-10-25 10:50 UTC · graphify callflow-html</p>
+</div>
+
+</div><!-- .container -->
+
+<script>
+(function () {
+  const mermaidConfig = {
+    startOnLoad: false,
+    theme: 'dark',
+    securityLevel: 'loose',
+    flowchart: { htmlLabels: true, useMaxWidth: true },
+    themeVariables: {
+      primaryColor: '#1e293b',
+      primaryTextColor: '#e2e8f0',
+      primaryBorderColor: '#38bdf8',
+      secondaryColor: '#0f172a',
+      tertiaryColor: '#334155',
+      lineColor: '#64748b',
+      textColor: '#e2e8f0',
+    }
+  };
+
+  mermaid.initialize(mermaidConfig);
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function enhanceMermaidDiagrams() {
+    document.querySelectorAll('.mermaid').forEach((container) => {
+      if (container.dataset.zoomReady === 'true') return;
+      const svg = container.querySelector('svg');
+      if (!svg) return;
+
+      container.dataset.zoomReady = 'true';
+      container.classList.add('is-enhanced');
+
+      const viewport = document.createElement('div');
+      viewport.className = 'mermaid-viewport';
+      svg.parentNode.insertBefore(viewport, svg);
+      viewport.appendChild(svg);
+
+      const toolbar = document.createElement('div');
+      toolbar.className = 'mermaid-toolbar';
+      toolbar.innerHTML = [
+        '<button type="button" data-action="zoom-out" title="Zoom out">-</button>',
+        '<span class="zoom-level" data-role="level">100%</span>',
+        '<button type="button" data-action="zoom-in" title="Zoom in">+</button>',
+        '<button type="button" data-action="fit" title="Fit width">Fit</button>',
+        '<button type="button" data-action="reset" title="Reset view">Reset</button>'
+      ].join('');
+      container.insertBefore(toolbar, viewport);
+
+      const state = { scale: 1, x: 0, y: 0, dragging: false, startX: 0, startY: 0, originX: 0, originY: 0 };
+      const level = toolbar.querySelector('[data-role="level"]');
+
+      function applyTransform() {
+        svg.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
+        level.textContent = `${Math.round(state.scale * 100)}%`;
+      }
+
+      function zoomBy(delta) {
+        state.scale = clamp(state.scale + delta, 0.25, 3);
+        applyTransform();
+      }
+
+      function reset() {
+        state.scale = 1;
+        state.x = 0;
+        state.y = 0;
+        applyTransform();
+      }
+
+      function fitWidth() {
+        const rawWidth = svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width
+          ? svg.viewBox.baseVal.width
+          : svg.getBoundingClientRect().width / state.scale;
+        if (!rawWidth) {
+          reset();
+          return;
+        }
+        state.scale = clamp((viewport.clientWidth - 48) / rawWidth, 0.25, 1.4);
+        state.x = 0;
+        state.y = 0;
+        applyTransform();
+      }
+
+      toolbar.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.dataset.action;
+        if (action === 'zoom-in') zoomBy(0.15);
+        if (action === 'zoom-out') zoomBy(-0.15);
+        if (action === 'fit') fitWidth();
+        if (action === 'reset') reset();
+      });
+
+      viewport.addEventListener('wheel', (event) => {
+        if (!event.ctrlKey && !event.metaKey) return;
+        event.preventDefault();
+        zoomBy(event.deltaY < 0 ? 0.1 : -0.1);
+      }, { passive: false });
+
+      viewport.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        state.dragging = true;
+        state.startX = event.clientX;
+        state.startY = event.clientY;
+        state.originX = state.x;
+        state.originY = state.y;
+        viewport.classList.add('is-dragging');
+        viewport.setPointerCapture(event.pointerId);
+      });
+
+      viewport.addEventListener('pointermove', (event) => {
+        if (!state.dragging) return;
+        state.x = state.originX + event.clientX - state.startX;
+        state.y = state.originY + event.clientY - state.startY;
+        applyTransform();
+      });
+
+      function endDrag(event) {
+        if (!state.dragging) return;
+        state.dragging = false;
+        viewport.classList.remove('is-dragging');
+        if (viewport.hasPointerCapture(event.pointerId)) {
+          viewport.releasePointerCapture(event.pointerId);
+        }
+      }
+
+      viewport.addEventListener('pointerup', endDrag);
+      viewport.addEventListener('pointercancel', endDrag);
+      applyTransform();
+    });
+  }
+
+  function renderMermaid() {
+    const result = mermaid.run
+      ? mermaid.run({ querySelector: '.mermaid' })
+      : Promise.resolve();
+    Promise.resolve(result)
+      .then(enhanceMermaidDiagrams)
+      .catch((error) => {
+        console.error('Mermaid render failed:', error);
+        enhanceMermaidDiagrams();
+      });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderMermaid);
+  } else {
+    renderMermaid();
+  }
+})();
+</script>
+
+</body>
+</html>

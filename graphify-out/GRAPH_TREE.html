@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>/ — graphify tree viewer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      margin: 20px 0 0 24px;
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #1e3a56;
+    }
+    .controls {
+      margin: 20px 0 15px 24px;
+    }
+    button {
+      margin-right: 10px;
+      padding: 8px 18px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s ease-in-out;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    button:active {
+      background: #004085;
+    }
+    #tree-container {
+      width: calc(100vw - 48px); /* Adjust for body margin/padding */
+      height: 85vh;
+      overflow: auto;
+      border-radius: 8px;
+      background: #fff;
+      margin-left: 24px;
+      margin-right: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border: 1px solid #ddd;
+    }
+    svg {
+      background: #fff;
+      border-radius: 8px;
+      display: block; /* Important for D3 */
+    }
+    .node circle {
+      stroke-width: 2.5px;
+    }
+    .node text { /* Base style for the <text> container */
+      font: 13px 'Segoe UI', sans-serif;
+      paint-order: stroke fill; /* Ensures text is readable over lines */
+      stroke: #fff; /* White halo */
+      stroke-width: 3px; /* Halo thickness */
+      stroke-linejoin: round;
+      stroke-opacity: 0.85; /* Halo opacity */
+    }
+    .link {
+      fill: none;
+      stroke-opacity: 0.7;
+      stroke-width: 2px;
+    }
+  </style>
+</head>
+<body>
+  <h1>/ — Knowledge Graph</h1>
+  <div class="controls">
+    <button onclick="expandAll()">Expand All</button>
+    <button onclick="collapseAll()">Collapse All</button>
+    <button onclick="resetView()">Reset View</button>
+  </div>
+  <div id="tree-container">
+    <svg id="tree-svg" width="6000" height="8000"></svg>
+  </div>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    const initialJsonData = {"name":"/","total_count":411,"children":[{"name":"CLAUDE.md","total_count":2,"children":[{"name":"LangSmith Run Tree Tracing","total_count":1,"children":[]},{"name":"Supervisor-Researcher Multi-Agent Pattern","total_count":1,"children":[]}]},{"name":"demo_ace_langsmith.py","total_count":2,"children":[{"name":"demo_ace_langsmith.py \u2014 Interactive ACE Demo for LangSmith. Designed\u2026","total_count":1,"children":[]},{"name":"main()","total_count":1,"children":[]}]},{"name":"demo_ace_run.py","total_count":2,"children":[{"name":"ACE Cognitive State Execution & Demonstration Script.","total_count":1,"children":[]},{"name":"main()","total_count":1,"children":[]}]},{"name":"demo_ace_temporal.py","total_count":2,"children":[{"name":"demo_ace_temporal.py \u2014 Interactive ACE Demo with Temporal Durable Execution &\u2026","total_count":1,"children":[]},{"name":"run_interactive_demo()","total_count":1,"children":[]}]},{"name":"docker-compose.yml","total_count":54,"children":[{"name":"build","total_count":1,"children":[]},{"name":"build","total_count":1,"children":[]},{"name":"build","total_count":1,"children":[]},{"name":"command","total_count":1,"children":[]},{"name":"command","total_count":1,"children":[]},{"name":"container_name","total_count":1,"children":[]},{"name":"container_name","total_count":1,"children":[]},{"name":"container_name","total_count":1,"children":[]},{"name":"container_name","total_count":1,"children":[]},{"name":"context","total_count":1,"children":[]},{"name":"deep-research","total_count":1,"children":[]},{"name":"depends_on","total_count":1,"children":[]},{"name":"deploy","total_count":1,"children":[]},{"name":"deploy","total_count":1,"children":[]},{"name":"dockerfile","total_count":1,"children":[]},{"name":"driver","total_count":1,"children":[]},{"name":"driver","total_count":1,"children":[]},{"name":"env_file","total_count":1,"children":[]},{"name":"env_file","total_count":1,"children":[]},{"name":"env_file","total_count":1,"children":[]},{"name":"environment","total_count":1,"children":[]},{"name":"environment","total_count":1,"children":[]},{"name":"environment","total_count":1,"children":[]},{"name":"environment","total_count":1,"children":[]},{"name":"healthcheck","total_count":1,"children":[]},{"name":"image","total_count":1,"children":[]},{"name":"interval","total_count":1,"children":[]},{"name":"jupyter","total_count":1,"children":[]},{"name":"limits","total_count":1,"children":[]},{"name":"memory","total_count":1,"children":[]},{"name":"memory","total_count":1,"children":[]},{"name":"ports","total_count":1,"children":[]},{"name":"ports","total_count":1,"children":[]},{"name":"ports","total_count":1,"children":[]},{"name":"profiles","total_count":1,"children":[]},{"name":"research_reports","total_count":1,"children":[]},{"name":"reservations","total_count":1,"children":[]},{"name":"resources","total_count":1,"children":[]},{"name":"restart","total_count":1,"children":[]},{"name":"restart","total_count":1,"children":[]},{"name":"restart","total_count":1,"children":[]},{"name":"retries","total_count":1,"children":[]},{"name":"services","total_count":1,"children":[]},{"name":"start_period","total_count":1,"children":[]},{"name":"temporal","total_count":1,"children":[]},{"name":"temporal-worker","total_count":1,"children":[]},{"name":"temporal_data","total_count":1,"children":[]},{"name":"test","total_count":1,"children":[]},{"name":"timeout","total_count":1,"children":[]},{"name":"volumes","total_count":1,"children":[]},{"name":"volumes","total_count":1,"children":[]},{"name":"volumes","total_count":1,"children":[]},{"name":"volumes","total_count":1,"children":[]},{"name":"volumes","total_count":1,"children":[]}]},{"name":"langgraph.json","total_count":12,"children":[{"name":"deep_researcher","total_count":1,"children":[]},{"name":"dependencies","total_count":1,"children":[]},{"name":"dockerfile_lines","total_count":1,"children":[]},{"name":"env","total_count":1,"children":[]},{"name":"graphs","total_count":1,"children":[]},{"name":"learning_agent","total_count":1,"children":[]},{"name":"python_version","total_count":1,"children":[]},{"name":"research_agent","total_count":1,"children":[]},{"name":"research_agent_full","total_count":1,"children":[]},{"name":"research_agent_mcp","total_count":1,"children":[]},{"name":"research_agent_supervisor","total_count":1,"children":[]},{"name":"scope_research","total_count":1,"children":[]}]},{"name":"notebooks","total_count":10,"children":[{"name":"utils.py","total_count":10,"children":[{"name":".__init__()","total_count":1,"children":[]},{"name":"Alias for format_messages for backward compatibility","total_count":1,"children":[]},{"name":"Convert message content to displayable string","total_count":1,"children":[]},{"name":"Display a prompt with rich formatting and XML tag highlighting. Args:\u2026","total_count":1,"children":[]},{"name":"Format and display a list of messages with Rich formatting","total_count":1,"children":[]},{"name":"format_message()","total_count":1,"children":[]},{"name":"format_message_content()","total_count":1,"children":[]},{"name":"format_messages()","total_count":1,"children":[]},{"name":"SafePopen","total_count":1,"children":[]},{"name":"show_prompt()","total_count":1,"children":[]}]}]},{"name":"PROBLEM_STATEMENT_AND_SOLUTION.md","total_count":6,"children":[{"name":"Autonomous Cognitive Engine (ACE)","total_count":1,"children":[]},{"name":"Temporal State Checkpointing","total_count":1,"children":[]},{"name":"Three-Tier Cognitive Architecture","total_count":1,"children":[]},{"name":"Tier 1: Multi-Agent Deep Research","total_count":1,"children":[]},{"name":"Tier 2: Temporal Durable Execution","total_count":1,"children":[]},{"name":"Tier 3: LangSmith Observability & Evaluation","total_count":1,"children":[]}]},{"name":"pyproject.toml","total_count":1,"children":[{"name":"deep_research_from_scratch","total_count":1,"children":[]}]},{"name":"README.md","total_count":4,"children":[{"name":"Durable Agent Execution","total_count":1,"children":[]},{"name":"Dynamic Context Compression","total_count":1,"children":[]},{"name":"Human-in-the-Loop Review & Approval","total_count":1,"children":[]},{"name":"Temporal Workflow Orchestration","total_count":1,"children":[]}]},{"name":"setup.md","total_count":1,"children":[{"name":"ACE Environment Setup Guide","total_count":1,"children":[]}]},{"name":"src","total_count":185,"children":[{"name":"deep_research_from_scratch","total_count":185,"children":[{"name":"__init__.py","total_count":1,"children":[{"name":"Deep Research From Scratch - Tutorial implementation.","total_count":1,"children":[]}]},{"name":"autonomous_learning_agent.py","total_count":31,"children":[{"name":"administer_quiz()","total_count":1,"children":[]},{"name":"Checkpoint","total_count":1,"children":[]},{"name":"CheckpointContent","total_count":1,"children":[]},{"name":"CheckpointItem","total_count":1,"children":[]},{"name":"CheckpointResponse","total_count":1,"children":[]},{"name":"ClarifyWithUser","total_count":1,"children":[]},{"name":"create_content()","total_count":1,"children":[]},{"name":"decide_next_step()","total_count":1,"children":[]},{"name":"evaluate_submission()","total_count":1,"children":[]},{"name":"EvaluationResult","total_count":1,"children":[]},{"name":"Final report generation node. Synthesizes all research findings into a\u2026","total_count":1,"children":[]},{"name":"final_report_generation()","total_count":1,"children":[]},{"name":"Full Multi-Agent Research System This module integrates all components of the\u2026","total_count":1,"children":[]},{"name":"generate_structure()","total_count":1,"children":[]},{"name":"Node 1: Breaks the report down into topics (No content yet).","total_count":1,"children":[]},{"name":"Node 2: Generates study material and questions in PARALLEL (Batch).","total_count":1,"children":[]},{"name":"Node 3: Pauses graph to show content and wait for user answers.","total_count":1,"children":[]},{"name":"Node 4: Grades the quiz and decides next steps.","total_count":1,"children":[]},{"name":"Node 5: Remedial teaching using Feynman Technique (Simple Explanations).","total_count":1,"children":[]},{"name":"Output state for the research agent containing final research results. This\u2026","total_count":1,"children":[]},{"name":"ResearcherOutputState","total_count":1,"children":[]},{"name":"ResearcherState","total_count":1,"children":[]},{"name":"ResearchQuestion","total_count":1,"children":[]},{"name":"Schema for research brief generation.","total_count":1,"children":[]},{"name":"Schema for user clarification decisions during scoping phase.","total_count":1,"children":[]},{"name":"Schema for webpage content summarization.","total_count":1,"children":[]},{"name":"simplified_teaching()","total_count":1,"children":[]},{"name":"SimplifiedContent","total_count":1,"children":[]},{"name":"State","total_count":1,"children":[]},{"name":"State for the research agent containing message history and research metadata.\u2026","total_count":1,"children":[]},{"name":"Summary","total_count":1,"children":[]}]},{"name":"deep_research_agent.py","total_count":6,"children":[{"name":"Final report generation node. Synthesizes all research findings into a\u2026","total_count":1,"children":[]},{"name":"final_report_generation()","total_count":1,"children":[]},{"name":"Full Multi-Agent Research System This module integrates all components of the\u2026","total_count":1,"children":[]},{"name":"Save the final report to a file in the 'files' directory. Uses UUID to generate\u2026","total_count":1,"children":[]},{"name":"save_report_to_file()","total_count":1,"children":[]},{"name":"write_file()","total_count":1,"children":[]}]},{"name":"files","total_count":1,"children":[{"name":"coffee_shops_sf.md","total_count":1,"children":[{"name":"Sample SF Coffee Shops Benchmark","total_count":1,"children":[]}]}]},{"name":"gemma_model.py","total_count":9,"children":[{"name":"Extract plain text from LLM response content. Gemma 4 models can return a list\u2026","total_count":1,"children":[]},{"name":"extract_text_content()","total_count":1,"children":[]},{"name":"Gemma 4 Model Integration Layer. This module provides a clean, centralized\u2026","total_count":1,"children":[]},{"name":"Get the primary cognitive model for research orchestration. Prefers Gemma 4 by\u2026","total_count":1,"children":[]},{"name":"get_active_model_info()","total_count":1,"children":[]},{"name":"get_cognitive_model()","total_count":1,"children":[]},{"name":"get_gemma_model()","total_count":1,"children":[]},{"name":"Initialize the validated Gemma 4 chat model. Args: model_name: The Gemma model\u2026","total_count":1,"children":[]},{"name":"Return dictionary describing the active model provider and identifier.","total_count":1,"children":[]}]},{"name":"generate_checkpoint.py","total_count":10,"children":[{"name":"_safe()","total_count":1,"children":[]},{"name":"ACE Cognitive State Checkpoint Utilities. This module provides utilities for:\u2026","total_count":1,"children":[]},{"name":"Extract the ACE cognitive state from a running or paused graph thread. Args:\u2026","total_count":1,"children":[]},{"name":"get_cognitive_snapshot()","total_count":1,"children":[]},{"name":"make_checkpointer()","total_count":1,"children":[]},{"name":"Pretty-print the ACE cognitive state snapshot to stdout. Args: snapshot: Dict\u2026","total_count":1,"children":[]},{"name":"print_cognitive_state()","total_count":1,"children":[]},{"name":"Return a fresh MemorySaver checkpointer instance. A single shared checkpointer\u2026","total_count":1,"children":[]},{"name":"Serialize a cognitive snapshot to a JSON string. Lists of messages or\u2026","total_count":1,"children":[]},{"name":"snapshot_to_json()","total_count":1,"children":[]}]},{"name":"learning_agent.py","total_count":29,"children":[{"name":"administer_quiz()","total_count":1,"children":[]},{"name":"Checkpoint","total_count":1,"children":[]},{"name":"CheckpointContent","total_count":1,"children":[]},{"name":"CheckpointItem","total_count":1,"children":[]},{"name":"CheckpointResponse","total_count":1,"children":[]},{"name":"clarify_with_user()","total_count":1,"children":[]},{"name":"create_content()","total_count":1,"children":[]},{"name":"decide_next_step()","total_count":1,"children":[]},{"name":"Determine if the user's request contains sufficient information to proceed.\u2026","total_count":1,"children":[]},{"name":"evaluate_submission()","total_count":1,"children":[]},{"name":"EvaluationResult","total_count":1,"children":[]},{"name":"generate_structure()","total_count":1,"children":[]},{"name":"Get current date in a human-readable format.","total_count":1,"children":[]},{"name":"get_today_str()","total_count":1,"children":[]},{"name":"Input state - user only provides messages.","total_count":1,"children":[]},{"name":"InputState","total_count":1,"children":[]},{"name":"Learning Agent with User Clarification and Adaptive Quiz System. This module\u2026","total_count":1,"children":[]},{"name":"load_report()","total_count":1,"children":[]},{"name":"Node 0: Finds the most relevant report for the user's topic, or falls back to\u2026","total_count":1,"children":[]},{"name":"Node 1: Breaks the report down into topics (No content yet).","total_count":1,"children":[]},{"name":"Node 2: Generates study material and questions in PARALLEL (Batch).","total_count":1,"children":[]},{"name":"Node 3: Pauses graph to show content and wait for user answers.","total_count":1,"children":[]},{"name":"Node 4: Grades the quiz and decides next steps.","total_count":1,"children":[]},{"name":"Node 5: Remedial teaching using Feynman Technique (Simple Explanations).","total_count":1,"children":[]},{"name":"simplified_teaching()","total_count":1,"children":[]},{"name":"SimplifiedContent","total_count":1,"children":[]},{"name":"State","total_count":1,"children":[]},{"name":"Transform the conversation history into a comprehensive research brief. The\u2026","total_count":1,"children":[]},{"name":"write_research_brief()","total_count":1,"children":[]}]},{"name":"multi_agent_supervisor.py","total_count":8,"children":[{"name":"# NOTE: Do NOT overwrite research_brief - it was set by write_research_brief\u2026","total_count":1,"children":[]},{"name":"Coordinate research activities. Analyzes the research brief and current\u2026","total_count":1,"children":[]},{"name":"Execute supervisor decisions - either conduct research or end the process.\u2026","total_count":1,"children":[]},{"name":"execute_research_with_retry()","total_count":1,"children":[]},{"name":"get_notes_from_tool_calls()","total_count":1,"children":[]},{"name":"Multi-agent supervisor for coordinating research across multiple specialized\u2026","total_count":1,"children":[]},{"name":"supervisor()","total_count":1,"children":[]},{"name":"supervisor_tools()","total_count":1,"children":[]}]},{"name":"prompts.py","total_count":1,"children":[{"name":"Prompt templates for the deep research system. This module contains all prompt\u2026","total_count":1,"children":[]}]},{"name":"research_agent.py","total_count":10,"children":[{"name":"Analyze current state and decide on next actions. The model analyzes the\u2026","total_count":1,"children":[]},{"name":"Compress research findings into a concise summary. Takes all the research\u2026","total_count":1,"children":[]},{"name":"compress_research()","total_count":1,"children":[]},{"name":"Determine whether to continue research or provide final answer. Determines\u2026","total_count":1,"children":[]},{"name":"Execute all tool calls from the previous LLM response. Executes all tool calls\u2026","total_count":1,"children":[]},{"name":"llm_call()","total_count":1,"children":[]},{"name":"Research Agent Implementation. This module implements a research agent that can\u2026","total_count":1,"children":[]},{"name":"run_tool()","total_count":1,"children":[]},{"name":"should_continue()","total_count":1,"children":[]},{"name":"tool_node()","total_count":1,"children":[]}]},{"name":"research_agent_full.py","total_count":10,"children":[{"name":"checkpoint_and_resume()","total_count":1,"children":[]},{"name":"final_report_generation()","total_count":1,"children":[]},{"name":"Full Multi-Agent Research System \u2014 ACE Production Graph. This module integrates\u2026","total_count":1,"children":[]},{"name":"Interrupt point between planning and research execution. The graph pauses here\u2026","total_count":1,"children":[]},{"name":"Populate ACE cognitive fields from the freshly-written research_brief. This\u2026","total_count":1,"children":[]},{"name":"populate_cognitive_state()","total_count":1,"children":[]},{"name":"Save the final report to a file in the 'files' directory.","total_count":1,"children":[]},{"name":"save_report_to_file()","total_count":1,"children":[]},{"name":"Synthesizes all research findings into a comprehensive final report.","total_count":1,"children":[]},{"name":"write_file()","total_count":1,"children":[]}]},{"name":"research_agent_mcp.py","total_count":12,"children":[{"name":"Analyze current state and decide on tool usage with MCP integration. This node:\u2026","total_count":1,"children":[]},{"name":"Compress research findings into a concise summary. Takes all the research\u2026","total_count":1,"children":[]},{"name":"compress_research()","total_count":1,"children":[]},{"name":"Determine whether to continue with tool execution or compress research.\u2026","total_count":1,"children":[]},{"name":"Execute tool calls using MCP tools. This node: 1. Retrieves current tool calls\u2026","total_count":1,"children":[]},{"name":"execute_tools()","total_count":1,"children":[]},{"name":"Get or initialize MCP client lazily to avoid issues with LangGraph Platform.","total_count":1,"children":[]},{"name":"get_mcp_client()","total_count":1,"children":[]},{"name":"llm_call()","total_count":1,"children":[]},{"name":"Research Agent with MCP Integration. This module implements a research agent\u2026","total_count":1,"children":[]},{"name":"should_continue()","total_count":1,"children":[]},{"name":"tool_node()","total_count":1,"children":[]}]},{"name":"research_agent_scope.py","total_count":7,"children":[{"name":"clarify_with_user()","total_count":1,"children":[]},{"name":"Determine if the user's request contains sufficient information to proceed.\u2026","total_count":1,"children":[]},{"name":"Get current date in a human-readable format.","total_count":1,"children":[]},{"name":"get_today_str()","total_count":1,"children":[]},{"name":"Transform conversation history into a structured research brief. Async to avoid\u2026","total_count":1,"children":[]},{"name":"User Clarification and Research Brief Generation. This module implements the\u2026","total_count":1,"children":[]},{"name":"write_research_brief()","total_count":1,"children":[]}]},{"name":"retry_utils.py","total_count":4,"children":[{"name":"ainvoke_with_retry()","total_count":1,"children":[]},{"name":"Async version: Invoke model with exponential backoff retry for rate limiting.\u2026","total_count":1,"children":[]},{"name":"Invoke model with exponential backoff retry for rate limiting. Args: model: The\u2026","total_count":1,"children":[]},{"name":"invoke_with_retry()","total_count":1,"children":[]}]},{"name":"state_multi_agent_supervisor.py","total_count":7,"children":[{"name":"ConductResearch","total_count":1,"children":[]},{"name":"ResearchComplete","total_count":1,"children":[]},{"name":"State Definitions for Multi-Agent Research Supervisor This module defines the\u2026","total_count":1,"children":[]},{"name":"State for the multi-agent research supervisor. Manages coordination between\u2026","total_count":1,"children":[]},{"name":"SupervisorState","total_count":1,"children":[]},{"name":"Tool for delegating a research task to a specialized sub-agent.","total_count":1,"children":[]},{"name":"Tool for indicating that the research process is complete.","total_count":1,"children":[]}]},{"name":"state_research.py","total_count":11,"children":[{"name":"ClarifyWithUser","total_count":1,"children":[]},{"name":"Output state for the research agent containing final research results. This\u2026","total_count":1,"children":[]},{"name":"ResearcherOutputState","total_count":1,"children":[]},{"name":"ResearcherState","total_count":1,"children":[]},{"name":"ResearchQuestion","total_count":1,"children":[]},{"name":"Schema for research brief generation.","total_count":1,"children":[]},{"name":"Schema for user clarification decisions during scoping phase.","total_count":1,"children":[]},{"name":"Schema for webpage content summarization.","total_count":1,"children":[]},{"name":"State Definitions and Pydantic Schemas for Research Agent This module defines\u2026","total_count":1,"children":[]},{"name":"State for the research agent containing message history and research metadata.\u2026","total_count":1,"children":[]},{"name":"Summary","total_count":1,"children":[]}]},{"name":"state_scope.py","total_count":9,"children":[{"name":"AgentInputState","total_count":1,"children":[]},{"name":"AgentState","total_count":1,"children":[]},{"name":"ClarifyWithUser","total_count":1,"children":[]},{"name":"Input state for the full agent - only contains messages from user input.","total_count":1,"children":[]},{"name":"Main state for the full multi-agent research system. Extends MessagesState with\u2026","total_count":1,"children":[]},{"name":"ResearchQuestion","total_count":1,"children":[]},{"name":"Schema for structured research brief generation.","total_count":1,"children":[]},{"name":"Schema for user clarification decision and questions.","total_count":1,"children":[]},{"name":"State Definitions and Pydantic Schemas for Research Scoping. This defines the\u2026","total_count":1,"children":[]}]},{"name":"utils.py","total_count":19,"children":[{"name":"Deduplicate search results by URL to avoid processing duplicate content. Args:\u2026","total_count":1,"children":[]},{"name":"deduplicate_search_results()","total_count":1,"children":[]},{"name":"Fetch results from Tavily search API with content summarization. Args: query: A\u2026","total_count":1,"children":[]},{"name":"Format search results into a well-structured string output. Args:\u2026","total_count":1,"children":[]},{"name":"format_search_output()","total_count":1,"children":[]},{"name":"Get current date in a human-readable format.","total_count":1,"children":[]},{"name":"Get the current directory of the module. This function is compatible with\u2026","total_count":1,"children":[]},{"name":"get_current_dir()","total_count":1,"children":[]},{"name":"get_today_str()","total_count":1,"children":[]},{"name":"Perform search using Tavily API for multiple queries. Args: search_queries:\u2026","total_count":1,"children":[]},{"name":"Process search results by summarizing content where available. Args:\u2026","total_count":1,"children":[]},{"name":"process_search_results()","total_count":1,"children":[]},{"name":"Research Utilities and Tools. This module provides search and content\u2026","total_count":1,"children":[]},{"name":"Summarize webpage content using the configured summarization model. Args:\u2026","total_count":1,"children":[]},{"name":"summarize_webpage_content()","total_count":1,"children":[]},{"name":"tavily_search()","total_count":1,"children":[]},{"name":"tavily_search_multiple()","total_count":1,"children":[]},{"name":"think_tool()","total_count":1,"children":[]},{"name":"Tool for strategic reflection on research progress and decision-making. Use\u2026","total_count":1,"children":[]}]}]}]},{"name":"temporal_integration","total_count":77,"children":[{"name":"__init__.py","total_count":1,"children":[{"name":"Temporal Durable Execution and LangSmith Observability Integration for ACE.","total_count":1,"children":[]}]},{"name":"activities.py","total_count":7,"children":[{"name":"Execute ACE scoping, brief generation, and run up to the cognitive checkpoint\u2026","total_count":1,"children":[]},{"name":"Execute the full ACE research pipeline end-to-end without pausing for approval.","total_count":1,"children":[]},{"name":"execute_research_and_report_activity()","total_count":1,"children":[]},{"name":"execute_single_pass_research_activity()","total_count":1,"children":[]},{"name":"Resume the ACE graph from the checkpoint, executing supervisor, researchers,\u2026","total_count":1,"children":[]},{"name":"run_scoping_and_planning_activity()","total_count":1,"children":[]},{"name":"Temporal Activities wrapping the Autonomous Cognitive Engine (ACE). Each\u2026","total_count":1,"children":[]}]},{"name":"adapters.py","total_count":7,"children":[{"name":"Activity-wrapped entrypoint into the multi-agent supervisor subgraph.","total_count":1,"children":[]},{"name":"Adapters bridging LangGraph StateGraph nodes with Temporal LangGraphPlugin and\u2026","total_count":1,"children":[]},{"name":"Build a StateGraph identical to ACE's production graph, annotated with metadata\u2026","total_count":1,"children":[]},{"name":"build_temporal_annotated_ace_graph()","total_count":1,"children":[]},{"name":"get_langgraph_plugin_instance()","total_count":1,"children":[]},{"name":"Instantiate the official Temporal LangGraphPlugin with the annotated ACE graph.","total_count":1,"children":[]},{"name":"supervisor_subgraph_node()","total_count":1,"children":[]}]},{"name":"client.py","total_count":21,"children":[{"name":".__init__()","total_count":1,"children":[]},{"name":".connect()","total_count":1,"children":[]},{"name":".get_cognitive_state()","total_count":1,"children":[]},{"name":".get_handle()","total_count":1,"children":[]},{"name":".get_status()","total_count":1,"children":[]},{"name":".is_waiting_for_approval()","total_count":1,"children":[]},{"name":".start_research()","total_count":1,"children":[]},{"name":".submit_approval()","total_count":1,"children":[]},{"name":".wait_for_result()","total_count":1,"children":[]},{"name":"ACEWorkflowClient","total_count":1,"children":[]},{"name":"Check whether the workflow is paused at the cognitive checkpoint.","total_count":1,"children":[]},{"name":"Connect to Temporal Server using configured address, namespace, and LangSmith\u2026","total_count":1,"children":[]},{"name":"High-level client for launching, querying, and resuming ACE workflows on\u2026","total_count":1,"children":[]},{"name":"Initialize ACEWorkflowClient with connected Temporal client and config.","total_count":1,"children":[]},{"name":"Query the current lifecycle status of the workflow.","total_count":1,"children":[]},{"name":"Query the latest cognitive state snapshot from a running or paused workflow.","total_count":1,"children":[]},{"name":"Retrieve existing workflow handle by ID.","total_count":1,"children":[]},{"name":"Signal the paused workflow with a human approval, replanning, or rejection\u2026","total_count":1,"children":[]},{"name":"Start a new ACE research workflow and return its execution handle.","total_count":1,"children":[]},{"name":"Temporal Client interface for starting and interacting with ACE Research\u2026","total_count":1,"children":[]},{"name":"Wait for the workflow to complete execution and return its result.","total_count":1,"children":[]}]},{"name":"config.py","total_count":7,"children":[{"name":"Build TemporalConfig populated from environment variables with sensible\u2026","total_count":1,"children":[]},{"name":"Configuration for Temporal Durable Execution and LangSmith Observability in ACE.","total_count":1,"children":[]},{"name":"get_langsmith_plugin()","total_count":1,"children":[]},{"name":"get_temporal_config()","total_count":1,"children":[]},{"name":"Instantiate the official Temporal LangSmith plugin if tracing is enabled.\u2026","total_count":1,"children":[]},{"name":"Settings for Temporal client, worker, and workflow execution.","total_count":1,"children":[]},{"name":"TemporalConfig","total_count":1,"children":[]}]},{"name":"schemas.py","total_count":13,"children":[{"name":"ApprovalDecision","total_count":1,"children":[]},{"name":"Final result returned by ACEResearchWorkflow.","total_count":1,"children":[]},{"name":"FinalResearchOutput","total_count":1,"children":[]},{"name":"Human approval or replanning payload sent via Temporal signal.","total_count":1,"children":[]},{"name":"Input for resuming research execution after the checkpoint pause.","total_count":1,"children":[]},{"name":"Input payload to start an ACE research workflow.","total_count":1,"children":[]},{"name":"Output from the multi-agent research and report generation activity.","total_count":1,"children":[]},{"name":"Output from the scoping and research brief generation activity.","total_count":1,"children":[]},{"name":"ResearchWorkflowInput","total_count":1,"children":[]},{"name":"ResearchWorkflowResult","total_count":1,"children":[]},{"name":"ResumeResearchInput","total_count":1,"children":[]},{"name":"ScopingOutput","total_count":1,"children":[]},{"name":"Typed Data Schemas for Temporal Workflows and Activities.","total_count":1,"children":[]}]},{"name":"worker.py","total_count":6,"children":[{"name":"Create a configured Temporal Worker with registered ACE workflows, activities,\u2026","total_count":1,"children":[]},{"name":"create_temporal_worker()","total_count":1,"children":[]},{"name":"Run the standalone Temporal Worker until interrupted.","total_count":1,"children":[]},{"name":"run_worker()","total_count":1,"children":[]},{"name":"signal_handler()","total_count":1,"children":[]},{"name":"Temporal Worker process for ACE Research Workflows with LangSmith Observability.","total_count":1,"children":[]}]},{"name":"workflows.py","total_count":15,"children":[{"name":".__init__()","total_count":1,"children":[]},{"name":".get_cognitive_state()","total_count":1,"children":[]},{"name":".get_status()","total_count":1,"children":[]},{"name":".is_waiting_for_approval()","total_count":1,"children":[]},{"name":".run()","total_count":1,"children":[]},{"name":".submit_approval()","total_count":1,"children":[]},{"name":"ACEResearchWorkflow","total_count":1,"children":[]},{"name":"Durable Temporal Workflow Orchestrating the Autonomous Cognitive Engine (ACE).\u2026","total_count":1,"children":[]},{"name":"Durable workflow coordinating long-horizon ACE research execution.","total_count":1,"children":[]},{"name":"Initialize ACEResearchWorkflow instance state.","total_count":1,"children":[]},{"name":"Query current workflow status ('pending', 'scoping', 'paused', 'researching',\u2026","total_count":1,"children":[]},{"name":"Query the latest ACE cognitive state snapshot.","total_count":1,"children":[]},{"name":"Query whether the workflow is currently paused awaiting human input.","total_count":1,"children":[]},{"name":"Run the end-to-end durable research workflow.","total_count":1,"children":[]},{"name":"Signal workflow with human approval or replanning directive.","total_count":1,"children":[]}]}]},{"name":"test_ace_checkpoint.py","total_count":2,"children":[{"name":"main()","total_count":1,"children":[]},{"name":"test_ace_checkpoint.py \u2014 ACE Cognitive State + Checkpoint Smoke Test. Verifies:\u2026","total_count":1,"children":[]}]},{"name":"test_file_save.py","total_count":1,"children":[{"name":"Test script to verify file saving functionality","total_count":1,"children":[]}]},{"name":"test_gemma_smoke.py","total_count":3,"children":[{"name":"Minimal smoke test for Gemma 4 model integration.","total_count":1,"children":[]},{"name":"run_smoke_test()","total_count":1,"children":[]},{"name":"search_archive()","total_count":1,"children":[]}]},{"name":"test_research_agent_gemma.py","total_count":3,"children":[{"name":"End-to-end smoke test for Gemma 4 integrated research agent.","total_count":1,"children":[]},{"name":"run_e2e_research_agent_test()","total_count":1,"children":[]},{"name":"tracked_groq_invoke()","total_count":1,"children":[]}]},{"name":"tests","total_count":43,"children":[{"name":"conftest.py","total_count":1,"children":[{"name":"Pytest configuration and environment fixtures for ACE test suite.","total_count":1,"children":[]}]},{"name":"test_existing_behavior.py","total_count":11,"children":[{"name":"Regression tests ensuring existing ACE research graph behavior, schemas, and\u2026","total_count":1,"children":[]},{"name":"test_active_model_info()","total_count":1,"children":[]},{"name":"test_cognitive_snapshot_extraction()","total_count":1,"children":[]},{"name":"test_graph_structure_and_nodes()","total_count":1,"children":[]},{"name":"test_populate_cognitive_state()","total_count":1,"children":[]},{"name":"test_temporal_annotated_ace_graph_and_plugin()","total_count":1,"children":[]},{"name":"Verify snapshot extraction and JSON serialization from a compiled graph.","total_count":1,"children":[]},{"name":"Verify that all core ACE nodes and transitions exist in deep_researcher_builder.","total_count":1,"children":[]},{"name":"Verify that build_temporal_annotated_ace_graph sets execute_in metadata on all\u2026","total_count":1,"children":[]},{"name":"Verify that get_active_model_info returns expected provider details.","total_count":1,"children":[]},{"name":"Verify that populate_cognitive_state extracts the objective and copies research\u2026","total_count":1,"children":[]}]},{"name":"test_human_resume.py","total_count":9,"children":[{"name":"mock_research_track_resume()","total_count":1,"children":[]},{"name":"mock_scoping_pause_activity()","total_count":1,"children":[]},{"name":"test_workflow_handles_rejection_cleanly()","total_count":1,"children":[]},{"name":"test_workflow_pauses_and_resumes_with_approval()","total_count":1,"children":[]},{"name":"test_workflow_resumes_with_replanning_directive()","total_count":1,"children":[]},{"name":"Tests for human approval, checkpoint interruption, and replanning in Temporal\u2026","total_count":1,"children":[]},{"name":"Verify that a replan directive submitted via signal overrides the research\u2026","total_count":1,"children":[]},{"name":"Verify that rejecting a plan stops execution and does not run research.","total_count":1,"children":[]},{"name":"Verify that the workflow pauses at the cognitive checkpoint and resumes when\u2026","total_count":1,"children":[]}]},{"name":"test_langsmith_integration.py","total_count":9,"children":[{"name":"mock_obs_research()","total_count":1,"children":[]},{"name":"mock_obs_scoping()","total_count":1,"children":[]},{"name":"test_langsmith_plugin_creation_and_config()","total_count":1,"children":[]},{"name":"test_langsmith_plugin_disabled_when_tracing_false()","total_count":1,"children":[]},{"name":"test_workflow_runs_with_langsmith_plugin_attached()","total_count":1,"children":[]},{"name":"Tests verifying LangSmith observability plugin integration with Temporal\u2026","total_count":1,"children":[]},{"name":"Verify that LangSmithPlugin initializes with matching project name and\u2026","total_count":1,"children":[]},{"name":"Verify that Temporal Client and Worker execute workflow with LangSmithPlugin\u2026","total_count":1,"children":[]},{"name":"Verify that when tracing is explicitly disabled, get_langsmith_plugin returns\u2026","total_count":1,"children":[]}]},{"name":"test_temporal_workflow.py","total_count":13,"children":[{"name":"mock_clarification_scoping_activity()","total_count":1,"children":[]},{"name":"mock_failing_then_succeeding_scoping()","total_count":1,"children":[]},{"name":"mock_research_activity()","total_count":1,"children":[]},{"name":"mock_scoping_activity()","total_count":1,"children":[]},{"name":"Temporal Workflow and Worker execution tests using Temporal's\u2026","total_count":1,"children":[]},{"name":"test_invalid_empty_input_fails_non_retryable()","total_count":1,"children":[]},{"name":"test_scoping_clarification_path_returns_clarification_needed()","total_count":1,"children":[]},{"name":"test_transient_activity_failure_is_retried_and_succeeds()","total_count":1,"children":[]},{"name":"test_workflow_start_and_complete_auto_approve()","total_count":1,"children":[]},{"name":"Verify that a transient activity failure is retried by Temporal retry policy\u2026","total_count":1,"children":[]},{"name":"Verify that ACEResearchWorkflow completes end-to-end when auto_approve=True.","total_count":1,"children":[]},{"name":"Verify that an empty objective immediately raises a non-retryable\u2026","total_count":1,"children":[]},{"name":"Verify that when scoping asks for user clarification, the workflow returns\u2026","total_count":1,"children":[]}]}]},{"name":"start_studio.ps1","total_count":1,"children":[]}]};
+
+    function transformData(jsonData) {
+        // Helper function to recursively build the children structure
+        function processNode(node, parentL1StageName) {
+            let displayName = node.name;
+            // Append total_count if it exists and is not already in the name
+            if (node.total_count !== undefined) {
+                if (!/\(Total Count: \d+\)$/.test(displayName)) {
+                    displayName += ` (Total Count: ${node.total_count})`;
+                }
+            }
+
+            const newNode = { name: displayName };
+
+            if (parentL1StageName === "Root") {
+                 newNode.originalStageName = node.name;
+            } else {
+                newNode.originalStageName = parentL1StageName;
+            }
+
+            if (node.children && node.children.length > 0) {
+                const stageNameToPass = (parentL1StageName === "Root") ? node.name : parentL1StageName;
+                newNode.children = node.children.map(child => processNode(child, stageNameToPass));
+            }
+
+            return newNode;
+        }
+
+        let rootDisplayName = jsonData.name;
+        if (jsonData.total_count !== undefined && !/\(Total Count: \d+\)$/.test(rootDisplayName)) {
+            rootDisplayName += ` (Total Count: ${jsonData.total_count})`;
+        }
+
+        return {
+            name: rootDisplayName,
+            originalStageName: "Root",
+            children: (jsonData.children || []).map(child => processNode(child, "Root"))
+        };
+    }
+
+    const treeData = transformData(initialJsonData);
+
+    // Auto-populated phaseColors: every depth-1 child of the root gets
+    // a stable colour from a bigger palette so all top-level dirs are
+    // distinguishable.
+    const PALETTE = [
+      ["#3498DB","#2980B9","#AED6F1"], ["#2ECC71","#27AE60","#A9DFBF"],
+      ["#E74C3C","#C0392B","#F5B7B1"], ["#9B59B6","#8E44AD","#D7BDE2"],
+      ["#F39C12","#D68910","#FAD7A0"], ["#1ABC9C","#117864","#A2D9CE"],
+      ["#34495E","#1B2631","#ABB2B9"], ["#E67E22","#BA4A00","#F5CBA7"],
+      ["#16A085","#0E6655","#A2D9CE"], ["#D35400","#A04000","#EDBB99"],
+      ["#7F8C8D","#566573","#D5DBDB"], ["#C0392B","#7B241C","#F5B7B1"],
+      ["#2E86C1","#1B4F72","#A9CCE3"], ["#28B463","#196F3D","#A9DFBF"],
+      ["#AF7AC5","#6C3483","#D2B4DE"],
+    ];
+    const phaseColors = { "Root": { fill: "#4A4A4A", stroke: "#333333", collapsedFill: "#6C757D" },
+                          "Default": { fill: "#BDC3C7", stroke: "#95A5A6", collapsedFill: "#ECF0F1" } };
+    (initialJsonData.children || []).forEach((c, i) => {
+      const pal = PALETTE[i % PALETTE.length];
+      phaseColors[c.name] = { fill: pal[0], stroke: pal[1], collapsedFill: pal[2] };
+    });
+
+    const levelSpecificPalettes = {
+      0: { fill: "#4A4A4A", stroke: "#333333", collapsedFill: "#6C757D" },
+      2: { fill: "#6ab04c", stroke: "#508a38", collapsedFill: "#a3d391" },
+      3: { fill: "#f0932b", stroke: "#d0730f", collapsedFill: "#f6c07e" },
+      4: { fill: "#be2edd", stroke: "#a01cb3", collapsedFill: "#e08bf2" },
+      5: { fill: "#00a8ff", stroke: "#007ac1", collapsedFill: "#74d2ff" },
+      6: { fill: "#e55039", stroke: "#c23620", collapsedFill: "#f09a8d" },
+      default: { fill: "#747d8c", stroke: "#57606f", collapsedFill: "#a4b0be" }
+    };
+
+    const svgElement = d3.select("#tree-svg");
+    const initialSvgWidth = +svgElement.attr("width");
+    const initialSvgHeight = +svgElement.attr("height");
+    const margin = { top: 40, right: 120, bottom: 80, left: 450 };
+    let width = initialSvgWidth - margin.left - margin.right;
+    let height = initialSvgHeight - margin.top - margin.bottom;
+    const duration = 500;
+    let nodeCounter = 0;
+    const g = svgElement.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    const treemap = d3.tree().nodeSize([40, 0]);
+    let rootNode = d3.hierarchy(treeData, d => d.children);
+    rootNode.x0 = 0;
+    rootNode.y0 = 0;
+
+    if (rootNode.children) {
+      rootNode.children.forEach(d_child => {
+        if (d_child.children) { collapseBranch(d_child); }
+      });
+    }
+    updateTree(rootNode);
+
+    function collapseBranch(d) { if (d.children) { d._children = d.children; d._children.forEach(collapseBranch); d.children = null; } }
+    function expandBranch(d) { if (d._children) { d.children = d._children; d._children = null; } if (d.children) { d.children.forEach(expandBranch); } }
+    window.expandAll = () => { expandBranch(rootNode); updateTree(rootNode); };
+    window.collapseAll = () => { if (rootNode.children) { rootNode.children.forEach(collapseBranch); } updateTree(rootNode); };
+    window.resetView = () => { if (rootNode.children) { rootNode.children.forEach(d_child => { if (d_child.children || d_child._children) { collapseBranch(d_child); } }); } if (rootNode._children && !rootNode.children) { rootNode.children = rootNode._children; rootNode._children = null; } updateTree(rootNode); };
+
+    function updateTree(source) {
+      const treeLayoutData = treemap(rootNode);
+      let nodes = treeLayoutData.descendants();
+      let links = treeLayoutData.descendants().slice(1);
+
+      let minX = 0;
+      let maxX = 0;
+      if (nodes.length > 0) {
+        minX = d3.min(nodes, d => d.x);
+        maxX = d3.max(nodes, d => d.x);
+      }
+
+      let neededHeight = Math.max(initialSvgHeight, maxX - minX + margin.top + margin.bottom + 100);
+      svgElement.transition().duration(duration / 2).attr("height", neededHeight);
+      g.transition().duration(duration / 2).attr("transform", `translate(${margin.left},${margin.top - minX + 40})`);
+
+      nodes.forEach(d => { d.y = d.depth * 400; }); // Adjust horizontal separation if needed
+
+      const node = g.selectAll('g.node').data(nodes, d => d.id || (d.id = ++nodeCounter));
+      const nodeEnter = node.enter().append('g')
+        .attr('class', d => "node" + (d.children || d._children ? " node--internal" : " node--leaf") + (d._children ? " _children" : ""))
+        .attr('transform', d => `translate(${source.y0},${source.x0})`)
+        .on('click', (event, d) => { if (d.children) { d._children = d.children; d.children = null; } else if (d._children) { d.children = d._children; d._children = null; } updateTree(d); })
+        .style('cursor', d => (d.children || d._children) ? 'pointer' : 'default');
+
+      nodeEnter.append('circle').attr('r', 1e-6);
+
+      nodeEnter.append('text')
+        .attr('dy', '.35em')
+        .attr('x', d => d.children || d._children ? -14 : 14)
+        .attr('text-anchor', d => d.children || d._children ? 'end' : 'start')
+        .style("fill-opacity", 1e-6)
+        .call(wrapText, 380);
+
+      const nodeUpdate = nodeEnter.merge(node);
+      nodeUpdate.transition().duration(duration)
+        .attr('transform', d => `translate(${d.y},${d.x})`)
+        .attr('class', d => "node" + (d.children ? " node--internal" : " node--leaf") + (d._children ? " node--internal _children" : ""));
+
+      nodeUpdate.select('circle').attr('r', 8.5)
+        .style('fill', d => {
+            let palette;
+            if (d.depth === 0) {
+                palette = levelSpecificPalettes[0];
+            } else if (d.depth === 1) {
+                palette = phaseColors[d.data.originalStageName] || phaseColors.Default;
+            } else {
+                palette = levelSpecificPalettes[d.depth] || levelSpecificPalettes.default;
+            }
+            if (d._children) return palette.collapsedFill;
+            if (d.children) return palette.fill;
+            return "#fff";
+        })
+        .style('stroke', d => {
+            let palette;
+            if (d.depth === 0) {
+                palette = levelSpecificPalettes[0];
+            } else if (d.depth === 1) {
+                palette = phaseColors[d.data.originalStageName] || phaseColors.Default;
+            } else {
+                palette = levelSpecificPalettes[d.depth] || levelSpecificPalettes.default;
+            }
+            return palette.stroke;
+        });
+      nodeUpdate.select('text').style("fill-opacity", 1).call(wrapText, 380);
+
+      const nodeExit = node.exit().transition().duration(duration).attr('transform', d => `translate(${source.y},${source.x})`).remove();
+      nodeExit.select('circle').attr('r', 1e-6);
+      nodeExit.select('text').style('fill-opacity', 1e-6);
+
+      const link = g.selectAll('path.link').data(links, d => d.id);
+      const linkEnter = link.enter().insert('path', "g").attr('class', 'link').attr('d', d => { const o = { x: source.x0, y: source.y0 }; return diagonal(o, o); });
+
+      linkEnter.merge(link).transition().duration(duration).attr('d', d => diagonal(d, d.parent))
+        .style('stroke', d => {
+            const sourceNode = d.parent;
+            if (!sourceNode) return phaseColors.Default.stroke;
+            const l1AncestorName = sourceNode.data.originalStageName;
+            const colorPalette = phaseColors[l1AncestorName] || phaseColors.Default;
+            return colorPalette.stroke;
+        });
+      link.exit().transition().duration(duration).attr('d', d => { const o = { x: source.x, y: source.y }; return diagonal(o, o); }).remove();
+      nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+    }
+
+    function diagonal(s, d) { return `M ${s.y} ${s.x} C ${(s.y + d.y) / 2} ${s.x}, ${(s.y + d.y) / 2} ${d.x}, ${d.y} ${d.x}`; }
+
+    function wrapText(textElements, maxWidth) {
+        const textPartColors = {
+            name: '#343a40',
+            count: '#0056b3'
+        };
+        const countRegex = /(\s\(Total Count: \d+\))$/;
+
+        textElements.each(function () {
+            const textD3 = d3.select(this);
+            const originalNodeText = textD3.datum().data.name;
+            const x = parseFloat(textD3.attr("x") || 0);
+            const initialDy = textD3.attr("dy");
+            const textAnchor = textD3.attr("text-anchor");
+            const lineHeight = 1.1;
+
+            textD3.text(null);
+
+            let namePart = originalNodeText;
+            let countPartText = "";
+
+            const countMatch = originalNodeText.match(countRegex);
+            if (countMatch && originalNodeText.endsWith(countMatch[0])) {
+                namePart = originalNodeText.substring(0, originalNodeText.length - countMatch[0].length).trim();
+                countPartText = countMatch[0].trim();
+            }
+
+            const tokens = [];
+            namePart.split(/\s+/).filter(Boolean).forEach(word => {
+                tokens.push({ text: word, type: 'name' });
+            });
+            if (countPartText) {
+                tokens.push({ text: countPartText, type: 'count' });
+            }
+
+            if (tokens.length === 0 && originalNodeText) {
+                tokens.push({ text: originalNodeText, type: 'name' });
+            }
+
+            let currentTspan = textD3.append("tspan").attr("x", x).attr("dy", initialDy);
+            if (textAnchor === "end") currentTspan.attr("text-anchor", "end");
+
+            let lineTokens = [];
+
+            for (let i = 0; i < tokens.length; i++) {
+                const tokenObj = tokens[i];
+
+                lineTokens.push(tokenObj);
+                currentTspan.text(lineTokens.map(t => t.text).join(" "));
+
+                if (currentTspan.node().getComputedTextLength() > maxWidth && lineTokens.length > 1) {
+                    lineTokens.pop();
+
+                    currentTspan.text(null);
+                    lineTokens.forEach((prevToken, idx) => {
+                        currentTspan.append("tspan")
+                            .text((idx > 0 ? " " : "") + prevToken.text)
+                            .style("fill", textPartColors[prevToken.type] || textPartColors.name)
+                            .style("font-weight", prevToken.type === 'count' ? "bold" : "normal");
+                    });
+
+                    lineTokens = [tokenObj];
+                    currentTspan = textD3.append("tspan").attr("x", x).attr("dy", lineHeight + "em");
+                    if (textAnchor === "end") currentTspan.attr("text-anchor", "end");
+                }
+            }
+
+            currentTspan.text(null);
+            lineTokens.forEach((token, idx) => {
+                currentTspan.append("tspan")
+                    .text((idx > 0 ? " " : "") + token.text)
+                    .style("fill", textPartColors[token.type] || textPartColors.name)
+                    .style("font-weight", token.type === 'count' ? "bold" : "normal");
+            });
+
+            if (textD3.selectAll("tspan > tspan").empty() && textD3.select("tspan").text().length === 0 && originalNodeText) {
+                let t = textD3.select("tspan");
+                let displayText = originalNodeText;
+                t.text(displayText).style("fill", textPartColors.name);
+                if (t.node() && t.node().getComputedTextLength() > maxWidth && displayText.length > 20) {
+                    let estimatedChars = Math.floor(maxWidth / (t.node().getComputedTextLength()/displayText.length) );
+                    displayText = displayText.substring(0, Math.max(0, estimatedChars - 3)) + "...";
+                    t.text(displayText);
+                }
+            }
+        });
+    }
+  </script>
+</body>
+</html>

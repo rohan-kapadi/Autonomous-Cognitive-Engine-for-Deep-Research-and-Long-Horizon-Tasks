@@ -69,3 +69,6 @@ htmlcov/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Graphify cache
+graphify-out/cache/
