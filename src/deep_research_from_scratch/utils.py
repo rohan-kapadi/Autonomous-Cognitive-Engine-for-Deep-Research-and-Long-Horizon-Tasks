@@ -8,6 +8,7 @@ including web search capabilities and content summarization tools.
 from pathlib import Path
 from datetime import datetime
 from typing_extensions import Annotated, List, Literal
+import asyncio
 
 from langchain.chat_models import init_chat_model 
 from langchain_core.messages import HumanMessage
@@ -92,14 +93,14 @@ def summarize_webpage_content(webpage_content: str) -> str:
         # Truncate content to prevent token limit errors (approx 1-1.5k tokens)
         # Reduced from 15000 to 5000 to avoid hitting 6000 TPM limit on Groq free tier
         truncated_content = webpage_content[:5000]
-        
+
         # Set up structured output model for summarization
         structured_model = summarization_model.with_structured_output(Summary)
 
-        # Generate summary
+        # Generate summary (sync — safe to call from asyncio.to_thread)
         summary = structured_model.invoke([
             HumanMessage(content=summarize_webpage_prompt.format(
-                webpage_content=truncated_content, 
+                webpage_content=truncated_content,
                 date=get_today_str()
             ))
         ])
