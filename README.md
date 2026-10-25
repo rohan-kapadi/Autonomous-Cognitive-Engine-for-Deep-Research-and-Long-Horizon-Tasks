@@ -1,4 +1,4 @@
-﻿# Autonomous Cognitive Engine (ACE) for Deep Research and Long-Horizon Tasks
+# Autonomous Cognitive Engine (ACE) for Deep Research and Long-Horizon Tasks
 
 An open-source cognitive runtime and multi-agent deep research engine powered by **Google Gemma 4** (`gemma-4-26b-a4b-it`), **LangGraph**, and **LangSmith**.
 
@@ -240,12 +240,85 @@ Access services:
 
 ---
 
+## Temporal Durable Execution & LangSmith Observability
+
+ACE integrates **Temporal Python SDK** and **LangSmith** to provide durable, recoverable, and observable execution for long-horizon research missions.
+
+### Architecture
+
+```
+User submits research query
+           │
+           ▼
+   [Temporal Workflow] (ACEResearchWorkflow)
+     │
+     ├─► [Activity 1] Scoping & Planning (Gemma 4 / Groq)
+     │       └── Populates ACE Cognitive State
+     │
+     ├─► [Durable Checkpoint Pause]
+     │       └── Workflow sleeps on Temporal server (0 CPU load)
+     │       └── Awaits Temporal Signal (Approve or Replan)
+     │
+     ├─► [Activity 2] Multi-Agent Research & Synthesis (Tavily + Gemma 4)
+     │       └── Recovers from failures with automatic retries & timeouts
+     │
+     └─► [Final Output] Returns report & saves artifact
+           │
+           ├─► Temporal Web UI (http://localhost:8233) — Execution history & replay
+           └─► LangSmith Dashboard — Linked AI traces & token usage
+```
+
+### 1. Start the Local Temporal Development Server
+
+In a dedicated terminal:
+```bash
+# Install Temporal CLI (if not already installed)
+# macOS: brew install temporal
+# Linux: curl -sSf https://temporal.download/cli.sh | sh
+
+# Start the local development server with Web UI
+temporal server start-dev
+```
+The Temporal Web UI is accessible at [http://localhost:8233](http://localhost:8233).
+
+### 2. Start the ACE Temporal Worker
+
+In another terminal, start the worker to poll the `ace-research` task queue:
+```bash
+uv run python -m temporal_integration.worker
+```
+
+### 3. Run the Interactive Temporal Demonstration
+
+Launch the interactive, judge-ready demonstration:
+```bash
+uv run python demo_ace_temporal.py
+```
+- Submits research objective to Temporal.
+- Executes `run_scoping_and_planning_activity`.
+- Pauses durably at the cognitive checkpoint.
+- Queries and displays the live ACE cognitive snapshot.
+- Prompts you to press **ENTER** to approve, or type a **replan directive**.
+- Sends a Temporal Signal and continues research to completion.
+
+### 4. Running the Test Suite
+
+Run the automated test suite covering existing behavior regressions, Temporal workflows, human-in-the-loop signals/queries, and LangSmith plugin integration:
+```bash
+uv run pytest tests/
+```
+
+---
+
 ## Testing
 
-Run the test suite to verify the ACE cognitive state, Gemma 4 models, and file persistence:
+Run the test suite to verify the ACE cognitive state, Gemma 4 models, file persistence, and Temporal durable workflows:
 
-```powershell
-# Test ACE cognitive state checkpointing
+```bash
+# Run complete test suite (includes Temporal workflow & human resume tests)
+uv run pytest tests/
+
+# Test ACE cognitive state checkpointing directly on LangGraph
 python test_ace_checkpoint.py
 
 # Test Gemma 4 connectivity and thinking block parsing

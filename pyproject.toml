@@ -20,6 +20,7 @@ dependencies = [
     "pandas>=2.3.3",
     "traitlets==5.9.0",
     "langchain-groq>=0.1.0",
+    "temporalio[langgraph,langsmith]>=1.27.0",
 ]
 
 [project.optional-dependencies]
@@ -57,7 +58,17 @@ lint.ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["D", "UP"]
+"tests/*" = ["D", "UP", "T201"]
+"demo_*.py" = ["T201", "D", "E402"]
+"temporal_integration/worker.py" = ["T201"]
+"temporal_integration/config.py" = ["T201"]
+"test_*.py" = ["T201", "D", "E402"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]

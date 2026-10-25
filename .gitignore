@@ -1,4 +1,4 @@
-﻿# ========================================================
+# ========================================================
 # Git Ignore Rules for ACE (Autonomous Cognitive Engine)
 # ========================================================
 
@@ -23,6 +23,8 @@ ENV/
 
 # LangGraph Local Server & Studio Artifacts
 .langgraph_api/
+.agent/
+.pytest_cache/
 
 # Packaging and Build Artifacts
 deep_research_from_scratch.egg-info/
