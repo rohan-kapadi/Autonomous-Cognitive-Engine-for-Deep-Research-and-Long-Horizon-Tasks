@@ -1,24 +1,44 @@
 # Autonomous Cognitive Engine (ACE) for Deep Research and Long-Horizon Tasks
 
-> **ACE is an open-source, stateful multi-agent research engine for complex, long-running research tasks. It combines planning, coordinated web research, human approval and replanning, explicit cognitive state, and Temporal-backed execution so users can inspect and steer research rather than treating it as an opaque one-shot LLM call.**
+> **ACE is an open-source cognitive runtime and stateful multi-agent deep research engine powered by Google Gemma 4 (`gemma-4-26b-a4b-it`) served via Jarvislabs Token Factory / Google GenAI / Groq, LangGraph, LangSmith, and Temporal-backed durable execution.**
 >
 > 📄 **Architectural Whitepaper**: For an in-depth breakdown of the problem statement, traditional agent failure modes, and our durable solution architecture, see [`PROBLEM_STATEMENT_AND_SOLUTION.md`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/PROBLEM_STATEMENT_AND_SOLUTION.md).
+>
+> 🌐 **Interactive ACE Research Studio**: Modern web frontend with real-time ASCII/matrix textmode canvas and visual cognitive inspector in [`web/`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/web).
 
 ---
 
-## 📌 Project Status & Implementation Caveats
+## 📌 Project Status & Key Capabilities
 
 - **Active Branch**: `temporal` (tested with Python 3.11, 3.12, and 3.13 via Astral `uv`).
-- **Upstream Sync**: Synchronized with `main` (commit `133eaf9`), incorporating non-blocking async research compression (`asyncio.to_thread`) while preserving the full human-in-the-loop checkpoint and Temporal durable execution.
-- **Dependency Status**: Fully locked and verified with `uv pip check` (188 packages compatible; includes `temporalio[langgraph,langsmith]==1.34.0`, `langgraph==1.2.17`, `langchain==1.4.6`, `langsmith==0.12.6`).
-- **Dual Execution Modes**:
-  1. **Primary Production Execution (Recommended)**: Temporal Workflow + Failure-Isolated Activities ([`temporal_integration/workflows.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/temporal_integration/workflows.py), [`temporal_integration/activities.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/temporal_integration/activities.py)). Coordinates scoping, human checkpoint pause, multi-agent research, and report generation with bounded retries, timeouts, and zero-CPU idle wait states.
-  2. **Experimental Adapter**: Node-level Temporal LangGraphPlugin adapter ([`temporal_integration/adapters.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/temporal_integration/adapters.py)). Maps individual LangGraph nodes to Temporal execution metadata (`execute_in="activity"` vs `"workflow"`).
+- **Upstream Sync**: Synchronized with `main`, incorporating Jarvislabs Token Factory Gemma 4 integration, non-blocking async research compression (`asyncio.to_thread`), and full two-tier testing (offline fakes + live endpoint verification).
+- **Persistent Cognitive State Architecture**: Explicit, checkpointable cognitive memory tracking:
+  - `objective`: The original user intent preserved across multi-turn reasoning
+  - `research_plan`: Living structured plan produced after scoping
+  - `tasks`, `completed_tasks`, `pending_tasks`: Dynamic task lifecycle tracking
+  - `sources`: Discovered URLs and verified citations
+  - `decisions`: Key architectural and analytical decisions made during execution
+  - `unresolved_questions`: Explicit tracking of open knowledge gaps
+  - `status`: Lifecycle state (`researching`, `complete`)
+- **Open-Weight Cognitive Intelligence (Gemma 4 on Jarvislabs)**:
+  - Every agent step (scoping, supervision, research, compression, report) runs on **Gemma 4** (`gemma-4-26b-a4b-it`) via the OpenAI-compatible **Jarvislabs Token Factory** endpoint.
+  - Switch providers with `RESEARCH_MODEL_PROVIDER` (`jarvislabs` | `gemma` for Google GenAI | `groq`); a provider without a valid key falls back to one that has one.
+  - Structured output uses strict `json_schema` with automatic `function_calling` fallback, tuned from live measurements on the endpoint.
+  - Built-in thinking token parsing (`extract_text_content`) preserving core reasoning outputs.
+- **Hierarchical Multi-Agent Supervisor Pattern**:
+  - Lead researcher agent dynamically orchestrates parallel sub-agents.
+  - Isolated context windows per research sub-topic to prevent context bloat.
+  - Tavily web search integration with iterative summarization and compression.
+- **Temporal Durable Execution**:
+  - **Primary Production Execution (Recommended)**: Temporal Workflow + Failure-Isolated Activities ([`temporal_integration/workflows.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/temporal_integration/workflows.py), [`temporal_integration/activities.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/temporal_integration/activities.py)). Coordinates scoping, human checkpoint pause, multi-agent research, and report generation with bounded retries, timeouts, and zero-CPU idle wait states.
+  - **Experimental Adapter**: Node-level Temporal LangGraphPlugin adapter ([`temporal_integration/adapters.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/temporal_integration/adapters.py)). Maps individual LangGraph nodes to Temporal execution metadata (`execute_in="activity"` vs `"workflow"`).
 - **Honest Durability Guarantees**:
-  - **LangGraph Checkpoint State**: Managed via `MemorySaver`. Operates within single Python worker processes for graph pauses and resumes. It does *not* survive process termination by itself unless backed by a persistent checkpointer.
+  - **LangGraph Checkpoint State**: Managed via `MemorySaver`. Operates within single Python worker processes for graph pauses and resumes.
   - **Temporal Workflow History**: Persisted on the Temporal Server. Survives worker crashes, worker restarts, and machine reboots. Workflows replay deterministically from their event log.
   - **Report Artifacts**: Persisted to local disk (`src/deep_research_from_scratch/files/report_<id>.md`) or mounted Docker volumes. Survives application and worker restarts.
-
+- **Full Observability & LangSmith Tracing**:
+  - Native integration with LangGraph Studio for real-time visual orchestration.
+  - End-to-end tracing in LangSmith tracking token usage, tool calls, and state diffs.
 
 ---
 
@@ -182,7 +202,7 @@ flowchart TD
 ```mermaid
 flowchart LR
     subgraph Client Layer
-        CLI[Terminal Demo / API Client]
+        CLI[Terminal Demo / Web Studio UI]
     end
 
     subgraph Temporal Orchestration
@@ -387,12 +407,25 @@ cp .env.example .env
 Ensure the following variables are configured in `.env`:
 
 ```env
-# Required for Model Reasoning & Web Search
-GOOGLE_API_KEY=your_google_gemini_api_key
-GROQ_API_KEY=your_groq_api_key
-TAVILY_API_KEY=your_tavily_search_api_key
+# Model provider for all agent steps: jarvislabs (default) | gemma | groq
+RESEARCH_MODEL_PROVIDER=jarvislabs
 
-# LangSmith Tracing & Observability
+# Primary Model: Gemma 4 via Jarvislabs Token Factory (OpenAI-compatible)
+JARVISLABS_API_KEY=your_jarvislabs_api_key_here
+JARVISLABS_MODEL=gemma-4-26b-a4b-it
+
+# Alternative: Gemma 4 via Google GenAI (RESEARCH_MODEL_PROVIDER=gemma)
+GOOGLE_API_KEY=your_google_api_key_here
+GEMMA_MODEL_NAME=gemma-4-26b-a4b-it
+
+# Fast Scoping / Fallback: Groq (RESEARCH_MODEL_PROVIDER=groq)
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=groq:qwen/qwen3.8-27b
+
+# Web Search Tool: Tavily
+TAVILY_API_KEY=your_tavily_api_key_here
+
+# LangSmith Tracing & Observability (Optional)
 LANGCHAIN_TRACING_V2=true
 LANGSMITH_API_KEY=your_langsmith_api_key
 LANGSMITH_PROJECT=ace-temporal-demo
@@ -431,24 +464,58 @@ TEMPORAL_WORKFLOW_ID_PREFIX=ace-research
    - Press `ENTER` to approve the plan, or type a replan directive (e.g., *"Focus specifically on open-source vector engines"*).
    - Review the completed report preview and output path.
 
-### Path 2: Standalone LangGraph Execution (No Temporal Required)
+### Path 2: Interactive ACE Research Studio (Web App + FastAPI)
+
+Launch the full-stack ACE Research Studio with the real-time Textmode Matrix Canvas and cognitive inspector:
+
+```bash
+# Start both backend API (:8000) and frontend UI (:5173) with one command:
+./start_studio.sh
+```
+
+Or run frontend and backend separately:
+```bash
+# Terminal 1: Backend API
+uv run python web_api.py
+
+# Terminal 2: Vite React Frontend
+npm --prefix web run dev
+```
+Open **`http://localhost:5173`** in your browser.
+
+---
+
+### Path 3: Standalone Automated Scoping Demo (No Temporal Required)
+
+Runs a complete multi-turn scoping loop and prints the structured ACE cognitive state snapshot:
 
 ```bash
 uv run python demo_ace_run.py
 ```
 
-### Path 3: Live LangSmith Tracing Demo
+---
+
+### Path 4: Live LangSmith Tracing Demo
+
+Designed for live presentations and hackathon demonstrations with direct LangSmith trace links:
 
 ```bash
 uv run python demo_ace_langsmith.py
 ```
 
-### Path 4: LangGraph Studio UI
+---
+
+### Path 5: LangGraph Studio UI
 
 ```bash
 uvx --refresh --from "langgraph-cli[inmem]" --with-editable . --python 3.12 langgraph dev --allow-blocking
 ```
 *Open Studio at: `https://smith.langchain.com/studio/?baseUrl=http://localhost:8000`*
+
+1. Select the `research_agent_full` graph.
+2. Click **`+` (New Thread)**.
+3. Submit your research topic.
+4. Watch the agent clarify scope, generate the cognitive plan, run the research sub-agents, and write the final report.
 
 ---
 
@@ -476,25 +543,35 @@ Services exposed:
 
 ## 🧪 Testing & Verification
 
-The test suite runs 100% offline with zero external API dependencies (all external LLM, Tavily, and Temporal server calls are mocked or execute in an in-memory test environment):
+The test suite features two tiers: a 100% offline suite that requires zero external API keys and runs instantaneously using in-memory fakes and Temporal test environments, and an optional live tier that verifies real Jarvislabs and Tavily endpoints.
 
 ```bash
-# Verify all environment dependencies are compatible
+# Verify all environment dependencies are locked and compatible
 uv pip check
 
-# Run all automated tests with verbose test execution output
+# Tier 1 (Default): Offline tests (zero cost, no external API keys required)
 uv run pytest tests/ -v
+
+# Tier 2: Live tests with real Jarvislabs + Tavily endpoints (requires keys in .env)
+uv run pytest --live -v tests/test_jarvislabs_endpoint.py
+uv run pytest --live -v -s
 ```
 
-### Test Suite Breakdown (15 Tests Passed)
+### Test Suite Breakdown
 
-| Test Suite | Tests | Status | What It Proves |
+| Test File | Tests | Mode | What It Proves |
 |---|---|---|---|
-| [`tests/test_existing_behavior.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_existing_behavior.py) | 5 passed | ✅ Passing | Core LangGraph nodes, transitions, cognitive state initializers, and plugin adapters remain intact. |
-| [`tests/test_temporal_workflow.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_temporal_workflow.py) | 4 passed | ✅ Passing | Workflow lifecycle, empty objective validation, activity retry policy with backoff, and scoping clarification handling. |
-| [`tests/test_human_resume.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_human_resume.py) | 3 passed | ✅ Passing | Human approval signal, dynamic replan directive propagation, and plan rejection handling. |
-| [`tests/test_langsmith_integration.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_langsmith_integration.py) | 3 passed | ✅ Passing | LangSmith plugin configuration, consistent project naming, and workflow execution with plugin attached. |
-
+| [`tests/test_temporal_workflow.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_temporal_workflow.py) | 4 passed | Offline | Temporal workflow lifecycle, empty objective validation, activity retry policy with backoff, and scoping clarification handling. |
+| [`tests/test_human_resume.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_human_resume.py) | 3 passed | Offline | Human approval signal, dynamic replan directive propagation, and plan rejection handling. |
+| [`tests/test_langsmith_integration.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_langsmith_integration.py) | 3 passed | Offline | LangSmith plugin configuration, consistent project naming, and workflow execution with plugin attached. |
+| [`tests/test_existing_behavior.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_existing_behavior.py) | 5 passed | Offline | Core LangGraph nodes, transitions, cognitive state initializers, and plugin adapters remain intact. |
+| [`tests/test_model_provider.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_model_provider.py) | Unit | Offline | Provider selection, key fallback, Jarvislabs config, and structured-output fallback chain. |
+| [`tests/test_web_search.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_web_search.py) | Unit | Offline | Tavily tool querying, citation deduplication, and summarization fallback. |
+| [`tests/test_research_agent.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_research_agent.py) | Unit | Offline | Researcher loop: search -> reflect -> compress findings. |
+| [`tests/test_supervisor.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_supervisor.py) | Unit | Offline | Lead researcher delegation, parallel research, retries, and completion guards. |
+| [`tests/test_full_flow.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_full_flow.py) | Integration | Offline | Full end-to-end graph flow: scoping -> research -> report saved. |
+| [`tests/test_jarvislabs_endpoint.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_jarvislabs_endpoint.py) | Integration | Live (`--live`) | Live OpenAI-compatible endpoint: models list, completions, tool calling, structured output. |
+| [`tests/test_live_e2e.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/tests/test_live_e2e.py) | E2E | Live (`--live`) | Live full research run executing against Jarvislabs Token Factory. |
 
 ---
 
@@ -503,13 +580,20 @@ uv run pytest tests/ -v
 ```
 Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/
 ├── .env.example                      # Template for all environment variables
-├── pyproject.toml                    # Dependencies (temporalio, langgraph, langchain)
+├── pyproject.toml                    # Dependencies (temporalio, langgraph, langchain, fastapi)
 ├── uv.lock                           # Locked dependency graph
 ├── Dockerfile                        # Multi-stage container image
 ├── docker-compose.yml                # Temporal Server, Worker, and App configuration
 ├── langgraph.json                    # Registered LangGraph graph endpoints
 ├── setup.md                          # Quick setup reference guide
 ├── README.md                         # Canonical system documentation
+├── PROBLEM_STATEMENT_AND_SOLUTION.md # Comprehensive problem and solution whitepaper
+├── start_studio.sh                   # One-click launcher for frontend + backend API
+├── web_api.py                        # FastAPI backend for ACE Research Studio
+│
+├── web/                              # ACE Research Studio Frontend (React + Vite + TypeScript)
+│   ├── src/components/               # TextmodeCanvas, CognitiveInspector, FlowDiagram
+│   └── package.json                  # Frontend dependencies
 │
 ├── demo_ace_temporal.py              # Interactive Temporal + LangSmith demonstration
 ├── demo_ace_langsmith.py             # LangSmith live tracing demonstration
@@ -533,17 +617,25 @@ Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/
 │   ├── research_agent.py             # Tavily search researcher agent
 │   ├── state_scope.py                # AgentState schema and cognitive field definitions
 │   ├── generate_checkpoint.py        # Checkpointer factory & state snapshot utilities
-│   ├── gemma_model.py                # Cognitive model factory (Gemma 4 / Groq)
+│   ├── gemma_model.py                # Cognitive model factory (Jarvislabs / Gemma 4 / Groq)
 │   ├── prompts.py                    # Lead researcher, scoping, and report prompts
 │   ├── utils.py                      # Search functions and thinking tools
 │   └── files/                        # Output directory for generated research reports
 │
-└── tests/                            # Automated test suite
-    ├── conftest.py                   # Mock test environment fixtures
-    ├── test_existing_behavior.py     # Regression tests for original graph
+└── tests/                            # Automated test suite (offline + live tiers)
+    ├── conftest.py                   # Mock test environment fixtures & live gating
+    ├── fakes.py                      # Deterministic fake LLMs and Tavily mock clients
     ├── test_temporal_workflow.py     # Temporal workflow execution and retries
     ├── test_human_resume.py          # Human approval, replan, and rejection
-    └── test_langsmith_integration.py # LangSmith plugin verification
+    ├── test_langsmith_integration.py # LangSmith plugin verification
+    ├── test_existing_behavior.py     # Regression tests for original graph
+    ├── test_model_provider.py        # Model provider selection and key fallback
+    ├── test_web_search.py            # Search dedup and summarization fallback
+    ├── test_research_agent.py        # Researcher loop execution
+    ├── test_supervisor.py            # Supervisor delegation and tool execution
+    ├── test_full_flow.py             # Full graph execution
+    ├── test_jarvislabs_endpoint.py   # Live endpoint validation
+    └── test_live_e2e.py              # Live end-to-end research execution
 ```
 
 ---
@@ -552,8 +644,13 @@ Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/
 
 | Variable | Default Value | Description |
 |---|---|---|
+| `RESEARCH_MODEL_PROVIDER` | `jarvislabs` | Primary cognitive model provider (`jarvislabs`, `gemma`, or `groq`). |
+| `JARVISLABS_API_KEY` | *(None)* | API key for Jarvislabs Token Factory OpenAI-compatible endpoint. |
+| `JARVISLABS_MODEL` | `gemma-4-26b-a4b-it` | Google Gemma 4 model identifier on Jarvislabs. |
 | `GOOGLE_API_KEY` | *(None)* | Google AI Studio key for primary Gemma 4 cognitive model. |
+| `GEMMA_MODEL_NAME` | `gemma-4-26b-a4b-it` | Model name when `RESEARCH_MODEL_PROVIDER=gemma`. |
 | `GROQ_API_KEY` | *(None)* | Groq API key for high-speed scoping and clarification structured output. |
+| `GROQ_MODEL` | `groq:qwen/qwen3.8-27b` | Model used for scoping or when Groq is configured. |
 | `TAVILY_API_KEY` | *(None)* | Tavily Search API key for researcher web queries. |
 | `LANGCHAIN_TRACING_V2` | `true` | Enables LangChain / LangSmith v2 tracing. |
 | `LANGSMITH_API_KEY` | *(None)* | LangSmith API key for exporting traces. |
@@ -562,8 +659,6 @@ Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/
 | `TEMPORAL_NAMESPACE` | `default` | Temporal execution namespace. |
 | `TEMPORAL_TASK_QUEUE` | `ace-research` | Task queue polled by ACE workers. |
 | `TEMPORAL_WORKFLOW_ID_PREFIX` | `ace-research` | Prefix used when auto-generating workflow IDs. |
-| `RESEARCH_MODEL_PROVIDER` | `google` | Primary cognitive model provider (`google` or `groq`). |
-| `GROQ_MODEL` | `groq:qwen/qwen3.8-27b` | Model used for scoping when Groq is configured. |
 
 ---
 
@@ -576,6 +671,44 @@ Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/
 | `LangSmithMissingAPIKeyWarning` | Tracing enabled but no `LANGSMITH_API_KEY`. | Traces are skipped gracefully; provide a key in `.env` to record runs in LangSmith. |
 | `Interrupts are only supported when a checkpointer is enabled` | Graph was compiled without checkpointer. | In [`research_agent_full.py`](file:///Users/sukrutdusane/Documents/Projects%20/Sy/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/Autonomous-Cognitive-Engine-for-Deep-Research-and-Long-Horizon-Tasks/src/deep_research_from_scratch/research_agent_full.py), ensure `agent = deep_researcher_builder.compile(checkpointer=ace_checkpointer)`. |
 | Rate limit error (HTTP 429) during research | Exceeded provider TPM/RPM quota. | `multi_agent_supervisor.py` includes exponential backoff sleep; adjust `max_concurrent_researchers = 1`. |
+
+---
+
+## 🏆 Hackathon & Evaluation Guide
+
+To help external evaluators, judges, and open-source contributors understand the technical contributions of our project:
+
+### 1. What Our Team Built (The Core Innovation)
+- **ACE Runtime & Cognitive State Schema (`src/deep_research_from_scratch/state_scope.py`)**:
+  We designed an explicit, checkpointable cognitive state model that captures the agent's long-horizon mental model (`objective`, `research_plan`, `tasks`, `completed_tasks`, `pending_tasks`, `sources`, `decisions`, `unresolved_questions`, `status`). Unlike standard stateless agents, ACE makes cognitive trajectory transparent and inspectable.
+- **Cognitive Snapshot & Inspection Utilities (`src/deep_research_from_scratch/generate_checkpoint.py`)**:
+  Created utilities to extract, format, and log persistent state snapshots across threads and LangSmith tracing runs.
+- **Production Graph & Multi-Provider Model Layer (`src/deep_research_from_scratch/gemma_model.py`)**:
+  A single model factory routes every agent step to Jarvislabs Token Factory (default), Google GenAI, or Groq, with key-aware fallback and a structured-output fallback chain.
+- **Temporal Durable Execution Engine (`temporal_integration/`)**:
+  Durable workflow and activity layer providing automatic checkpoint pause/resume via Temporal signals, zero-CPU waiting, automatic activity retry policies, and LangSmith tracing correlation.
+- **Interactive ACE Research Studio (`web/`)**:
+  Full-featured web user interface featuring live Textmode ASCII/matrix rendering, real-time cognitive state telemetry, human review approvals, and dossier previews.
+
+### 2. AI Model Roles
+- **Google Gemma 4 (`gemma-4-26b-a4b-it`) on Jarvislabs Token Factory**: Primary cognitive model for scoping, deep reasoning, lead supervision, research compression, and final report generation.
+- **Google GenAI / Groq**: Alternative providers selectable via `RESEARCH_MODEL_PROVIDER`.
+- **Tavily Search**: Real-time web retrieval powering parallel researcher sub-agents.
+
+### 3. Quick 2-Minute Demo Flow
+
+1. **Start the Engine**:
+   ```bash
+   python demo_ace_run.py
+   ```
+2. **Explain the Live Execution**:
+   - **Phase 1 (Scoping)**: The agent analyzes the user prompt and determines if clarification is needed.
+   - **Phase 2 (Cognitive Planning)**: The agent formulates a living research plan and populates all 9 ACE cognitive state fields.
+   - **Phase 3 (Research)**: The supervisor delegates sub-topics to researcher agents, which search with Tavily and compress their findings.
+   - **Phase 4 (Report)**: The final report is written and saved; point out the printed **ACE Cognitive State** table showing `objective`, `research_plan`, `decisions`, and `status: complete`.
+3. **Show LangSmith Tracing & Temporal Web UI**:
+   - Open LangSmith to show the full visual execution trace under the project `deep_research_from_scratch`.
+   - Open Temporal Web UI (`http://localhost:8233`) to demonstrate workflow execution history and durability.
 
 ---
 
